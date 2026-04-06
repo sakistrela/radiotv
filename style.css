@@ -1,0 +1,62 @@
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: #000;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+}
+
+.video-frame {
+    width: 100%;
+    max-width: 1000px; /* Μεγάλο, επιβλητικό μέγεθος */
+    position: relative;
+    aspect-ratio: 16/9;
+    background: #000;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Γεμίζει όλο το πλαίσιο χωρίς κενά */
+    cursor: pointer;
+}
+
+/* Το "Μοντέρνο" UI: Καθαρό, χωρίς περιγράμματα */
+.play-screen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.9) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: 0.4s ease;
+}
+
+.play-btn {
+    width: 0; 
+    height: 0; 
+    border-top: 30px solid transparent;
+    border-bottom: 30px solid transparent;
+    border-left: 50px solid #fff; /* Λευκό minimal βέλος */
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
+}
+
+.play-screen span {
+    color: #fff;
+    letter-spacing: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Όταν παίζει, το overlay χάνεται στο σκοτάδι */
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
