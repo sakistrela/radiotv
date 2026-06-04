@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio TV Trela</title>
+    <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .video-js {
+            margin: 20px auto;
+            width: 100% !important;
+            height: 450px !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Radio TV Trela Player</h1>
+        <p>Η λίστα σου παίζει ζωντανά εδώ:</p>
+
+        <video id="my-video" class="video-js vjs-default-skin" controls preload="auto">
+            <source src="playlist.m3u8" type="application/x-mpegURL">
+            Ο browser σου δεν υποστηρίζει αυτόν τον player.
+        </video>
+    </div>
+
+    <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
+    <script>
+        var player = videojs('my-video');
+    </script>
+</body>
+</html>
