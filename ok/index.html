@@ -1,0 +1,1243 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RadioChat Live</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f0f1e; color: #fff; font-family: Arial, sans-serif; height: 100vh; overflow: hidden; position: relative; }
+    .bg-container { position: fixed; inset: 0; z-index: -1; background-image: url('https://i.imgur.com/NMZc9VH.jpeg'); background-size: cover; background-position: center center; background-repeat: no-repeat; transition: filter 0.3s; }
+    .bg-overlay { position: fixed; inset: 0; z-index: -1; background: rgba(15, 15, 30, 0.7); }
+    .login { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
+    .login-box { background: rgba(22, 33, 62, 0.95); padding: 40px; border-radius: 16px; border: 2px solid #e94560; text-align: center; max-width: 400px; width: 90%; backdrop-filter: blur(10px); }
+    .login-box h1 { color: #e94560; margin-bottom: 20px; }
+    .login-box input { width: 100%; padding: 15px; border-radius: 10px; border: 2px solid #1f2937; background: rgba(15, 15, 30, 0.8); color: #fff; font-size: 1em; margin: 15px 0; }
+    .login-box button { width: 100%; padding: 15px; background: #e94560; border: none; border-radius: 10px; color: #fff; font-size: 1.1em; font-weight: bold; cursor: pointer; }
+    .login-box button:hover { background: #c73652; }
+    .error { background: #ef4444; color: #fff; padding: 10px; border-radius: 8px; margin-top: 10px; display: none; }
+    .error.banned-error { background: linear-gradient(135deg, #dc2626, #991b1b); border: 2px solid #fff; font-weight: bold; font-size: 1.1em; }
+    .app { display: flex; height: 100vh; display: none; }
+    .chat-main { flex: 1; display: flex; flex-direction: column; background: rgba(15, 15, 30, 0.3); transition: background 0.4s; }
+    .chat-main.private-mode { background: rgba(45, 27, 78, 0.6); }
+    .private-header { display: none; background: linear-gradient(90deg, #7c3aed, #a855f7); padding: 12px 20px; align-items: center; justify-content: space-between; border-bottom: 2px solid #c084fc; backdrop-filter: blur(10px); }
+    .private-header.show { display: flex; }
+    .private-header-text { font-weight: bold; font-size: 1.1em; }
+    .exit-private-btn { background: rgba(255,255,255,0.2); border: 2px solid #fff; color: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+    .exit-private-btn:hover { background: rgba(255,255,255,0.3); }
+    .header { background: rgba(22, 33, 62, 0.1); padding: 15px 20px; border-bottom: 2px solid #e94560; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(10px); gap: 10px; }
+    .header h2 { color: #e94560; font-size: 1.3em; }
+    .online-badge { 
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #10b981;
+  color: #10b981;
+  padding: 8px 18px; 
+  border-radius: 25px; 
+  font-size: 0.9em; 
+  font-weight: bold;
+  box-shadow: 0 0 10px #10b981, inset 0 0 10px rgba(16, 185, 129, 0.3);
+  text-shadow: 0 0 5px #10b981;
+}
+    
+    .sidebar-toggle-btn {
+      display: none;
+      background: #e94560;
+      border: none;
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      font-size: 1.5em;
+      cursor: pointer;
+      transition: all 0.3s;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .sidebar-toggle-btn:hover { background: #c73652; transform: scale(1.05); }
+    
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 500;
+      backdrop-filter: blur(3px);
+    }
+    .sidebar-overlay.show { display: block; }
+    
+    .sidebar-close-btn {
+      display: none;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+    .sidebar-close-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+    
+    .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 60%; width: fit-content; padding: 10px 15px; border-radius: 18px; background: rgba(31, 41, 55, 0.5); display: flex; align-items: flex-end; gap: 10px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.04); }
+    .msg.own { align-self: flex-end; background: rgba(59, 130, 246, 0.2); flex-direction: row-reverse; border: 1px solid rgba(255,255,255,0.1); }
+    .msg.private { background: rgba(124, 58, 237, 0.5); border: 1px solid rgba(192, 132, 252, 0.3); }
+    .msg.private.own { background: rgba(168, 85, 247, 0.6); }
+    .msg-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); }
+    .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .msg-content { flex: 1; min-width: 0; }
+    .msg .user { font-size: 0.85em; color: #10b981; margin-bottom: 4px; font-weight: bold; }
+    .msg.own .user { color: #93c5fd; text-align: right; }
+    .msg .text { line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; font-size: 1.6em; max-width: 100%; }
+    .msg .time { font-size: 0.75em; color: #9ca3af; margin-top: 4px; text-align: right; }
+    .msg.own .time { color: #bfdbfe; }
+    .input-area { background: rgba(22, 33, 62, 0.1); padding: 15px 20px; border-top: 2px solid rgba(31, 41, 55, 0.9); position: relative; backdrop-filter: blur(10px); }
+    .input-wrapper { display: flex; align-items: center; gap: 10px; background: rgba(15, 15, 30, 0.1); border-radius: 25px; padding: 8px 15px; border: 1px solid rgba(31, 41, 55, 0.9); }
+    
+    .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn { 
+      background: none; 
+      border: none; 
+      font-size: 1.5em; 
+      cursor: pointer; 
+      padding: 5px; 
+      transition: transform 0.2s; 
+      flex-shrink: 0;
+    }
+    .emoji-btn:hover, .bg-btn:hover, .banned-btn:hover, .sound-btn:hover, .radio-btn:hover { transform: scale(1.2); }
+    .banned-btn { display: none; }
+    .banned-btn.show { display: block; }
+    
+    .clear-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+      padding: 5px;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .clear-btn.show {
+      display: block;
+    }
+    .clear-btn:hover {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
+    }
+    
+    .radio-btn.playing {
+      animation: radioPulse 1.5s infinite;
+    }
+    @keyframes radioPulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(124, 58, 237, 0)); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.8)); }
+    }
+    
+    .input-field { flex: 1; background: none; border: none; color: #fff; font-size: 1em; padding: 8px 0; outline: none; min-width: 0; }
+    
+    .send-btn {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border: none;
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+    .send-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 25px rgba(59, 130, 246, 0.7);
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    }
+    .send-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.3s ease;
+    }
+    .send-btn:hover svg {
+      transform: translate(2px, -2px);
+    }
+    
+    .emoji-panel { position: absolute; bottom: 80px; left: 20px; background: rgba(26, 26, 46, 0.95); border-radius: 16px; padding: 0; display: none; width: 450px; height: 420px; box-shadow: 0 15px 50px rgba(0,0,0,0.6); z-index: 100; overflow: hidden; border: 2px solid #2d2d4a; flex-direction: column; backdrop-filter: blur(10px); }
+    .emoji-panel.show { display: flex; }
+    .emoji-tabs { display: flex; background: rgba(22, 33, 62, 0.9); border-bottom: 2px solid #2d2d4a; overflow-x: auto; scrollbar-width: thin; }
+    .emoji-tab { flex: 1; min-width: 45px; padding: 12px 8px; background: none; border: none; color: #9ca3af; font-size: 1.3em; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; }
+    .emoji-tab:hover { background: #1f2937; color: #fff; }
+    .emoji-tab.active { color: #e94560; border-bottom-color: #e94560; background: #1f2937; }
+    .emoji-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; }
+    .emoji-category { display: none; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+    .emoji-category.active { display: grid; }
+    .emoji { font-size: 1.8em; cursor: pointer; padding: 10px; text-align: center; border-radius: 10px; transition: all 0.2s; background: rgba(15, 15, 30, 0.8); aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+    .emoji:hover { background: #2d2d4a; transform: scale(1.15); }
+    .sidebar { width: 250px; background: rgba(22, 33, 62, 0.1); border-left: 2px solid #1f2937; display: flex; flex-direction: column; backdrop-filter: blur(10px); }
+    .sidebar-header { padding: 20px; border-bottom: 2px solid #1f2937; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .user-count { color: #10b981; font-size: 0.9em; }
+    .user-list { flex: 1; overflow-y: auto; padding: 10px; }
+    .user-item { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 8px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s; flex-shrink: 0; }
+    .avatar:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(233, 69, 96, 0.5); }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .avatar-upload-hint { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; font-size: 1.2em; }
+    .avatar:hover .avatar-upload-hint { opacity: 1; }
+    .avatar.loading { pointer-events: none; cursor: not-allowed; }
+    .avatar.loading:hover { transform: none; box-shadow: none; }
+    
+    /* ✅ Spinner για το avatar κατά τη φόρτωση */
+    .avatar-spinner {
+      width: 100%;
+      height: 100%;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #e94560;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-weight: bold; font-size: 0.95em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-status { font-size: 0.8em; color: #10b981; }
+    .private-lock-btn, .ban-user-btn { background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 3px; transition: transform 0.2s; flex-shrink: 0; }
+    .private-lock-btn:hover, .ban-user-btn:hover { transform: scale(1.3); }
+    .ban-user-btn { display: none; }
+    .ban-user-btn.show { display: block; }
+    .actions-area { padding: 15px; border-top: 2px solid #1f2937; display: flex; flex-direction: column; gap: 10px; }
+    .logout-btn, .admin-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; text-align: center; }
+    .logout-btn { background: #374151; }
+    .logout-btn:hover { background: #4b5563; }
+    .admin-btn { background: #e94560; display: none; }
+    .admin-btn:hover { background: #c73652; }
+    .private-notification-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); }
+    .private-notification-overlay.show { display: flex; }
+    .private-notification-popup { background: linear-gradient(135deg, #dc2626, #f97316); padding: 30px 40px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8); border: 3px solid #fff; animation: blinkPopup 1s infinite; cursor: pointer; }
+    @keyframes blinkPopup { 0%, 100% { opacity: 1; box-shadow: 0 20px 60px rgba(220, 38, 38, 0.8), 0 0 40px rgba(249, 115, 22, 0.6); transform: scale(1); } 50% { opacity: 0.7; box-shadow: 0 10px 30px rgba(220, 38, 38, 0.4), 0 0 20px rgba(249, 115, 22, 0.3); transform: scale(0.97); } }
+    .private-notification-popup h3 { color: #fff; font-size: 1.4em; margin-bottom: 10px; }
+    .private-notification-popup p { color: #fff; font-size: 1.1em; margin-bottom: 20px; }
+    .private-notification-popup .accept-btn { background: #fff; color: #dc2626; border: none; padding: 12px 30px; border-radius: 25px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+    .private-notification-popup .accept-btn:hover { transform: scale(1.05); background: #fef2f2; }
+    .bg-controls-panel { position: absolute; bottom: 75px; right: 20px; background: rgba(22, 33, 62, 0.95); border-radius: 16px; padding: 20px; width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 99; display: none; border: 2px solid #e94560; backdrop-filter: blur(10px); }
+    .bg-controls-panel.show { display: block; }
+    .bg-controls-panel h3 { color: #e94560; margin-bottom: 15px; font-size: 1.1em; }
+    .control-group { margin-bottom: 15px; }
+    .control-group label { display: block; color: #fff; margin-bottom: 8px; font-size: 0.9em; }
+    .control-group input[type="range"] { width: 100%; height: 6px; border-radius: 3px; background: #1f2937; outline: none; -webkit-appearance: none; }
+    .control-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #e94560; cursor: pointer; transition: all 0.3s; }
+    .control-group input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); background: #c73652; }
+    .control-group input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #e94560; cursor: pointer; border: none; }
+    .control-value { color: #10b981; font-size: 0.85em; margin-top: 5px; }
+    .banned-panel { position: absolute; bottom: 75px; right: 20px; background: rgba(22, 33, 62, 0.98); border-radius: 16px; padding: 20px; width: 360px; max-height: 500px; box-shadow: 0 15px 50px rgba(0,0,0,0.7); z-index: 101; display: none; border: 2px solid #dc2626; backdrop-filter: blur(10px); flex-direction: column; }
+    .banned-panel.show { display: flex; }
+    .banned-panel h3 { color: #dc2626; margin-bottom: 15px; font-size: 1.1em; display: flex; align-items: center; gap: 8px; }
+    .banned-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .close-banned-btn { background: none; border: none; color: #9ca3af; font-size: 1.5em; cursor: pointer; padding: 0 5px; transition: color 0.3s; }
+    .close-banned-btn:hover { color: #fff; }
+    .banned-users-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; max-height: 380px; }
+    .banned-user-item { display: flex; align-items: center; justify-content: space-between; background: rgba(15, 15, 30, 0.8); padding: 12px; border-radius: 10px; border: 1px solid rgba(220, 38, 38, 0.3); }
+    .banned-user-info { flex: 1; min-width: 0; }
+    .banned-user-name { font-weight: bold; color: #fff; font-size: 0.95em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .banned-user-time { font-size: 0.75em; color: #9ca3af; margin-top: 3px; }
+    .banned-user-by { font-size: 0.7em; color: #e94560; margin-top: 2px; }
+    .banned-user-type { font-size: 0.7em; color: #10b981; margin-top: 2px; font-weight: bold; }
+    .unban-btn { background: #10b981; border: none; color: #fff; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-size: 0.85em; font-weight: bold; transition: all 0.3s; flex-shrink: 0; margin-left: 10px; }
+    .unban-btn:hover { background: #059669; transform: scale(1.05); }
+    .no-banned { text-align: center; color: #9ca3af; padding: 30px 20px; font-style: italic; }
+    .ban-notification-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(10px); }
+    .ban-notification-overlay.show { display: flex; }
+    .ban-notification-popup { background: linear-gradient(135deg, #7f1d1d, #dc2626); padding: 40px 50px; border-radius: 20px; text-align: center; max-width: 450px; width: 90%; box-shadow: 0 20px 60px rgba(220, 38, 38, 0.6); border: 3px solid #fff; }
+    .ban-notification-popup .ban-icon { font-size: 4em; margin-bottom: 15px; }
+    .ban-notification-popup h2 { color: #fff; font-size: 1.8em; margin-bottom: 15px; }
+    .ban-notification-popup p { color: #fef2f2; font-size: 1.1em; margin-bottom: 10px; }
+    .ban-type-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); display: none; align-items: center; justify-content: center; z-index: 4000; backdrop-filter: blur(10px); }
+    .ban-type-overlay.show { display: flex; }
+    .ban-type-popup { background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding: 40px; border-radius: 20px; text-align: center; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(59, 130, 246, 0.6); border: 3px solid #fff; }
+    .ban-type-popup h2 { color: #fff; font-size: 1.6em; margin-bottom: 20px; }
+    .ban-type-popup p { color: #dbeafe; font-size: 1.1em; margin-bottom: 25px; }
+    .ban-type-buttons { display: flex; gap: 15px; justify-content: center; }
+    .ban-type-btn { flex: 1; padding: 15px 20px; border: none; border-radius: 12px; font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.3s; color: #fff; }
+    .ban-type-btn.username { background: linear-gradient(135deg, #dc2626, #991b1b); }
+    .ban-type-btn.username:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(220, 38, 38, 0.5); }
+    .ban-type-btn.cancel { background: #6b7280; }
+    .ban-type-btn.cancel:hover { background: #4b5563; }
+    
+    .player-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 75vh;
+      background: transparent;
+      backdrop-filter: none;
+      border-bottom: 3px solid rgba(255,255,255,0.5);
+      z-index: 950;
+      transform: translateY(-100%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+    }
+    .player-panel.show {
+      transform: translateY(0);
+    }
+    .player-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: linear-gradient(90deg, #ff00ff, #3333ff);
+      border-bottom: 2px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+      gap: 10px;
+    }
+    .player-panel-title {
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.1em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .player-header-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .player-close-btn {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid #fff;
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .player-close-btn:hover {
+      background: rgba(255,255,255,0.35);
+      transform: scale(1.1) rotate(9deg);
+    }
+    .player-disconnect-btn {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      border: 2px solid #fff;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .player-disconnect-btn:hover {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
+    }
+    .player-panel iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: transparent;
+    }
+    
+    .clear-confirmation-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5000;
+      backdrop-filter: blur(10px);
+    }
+    .clear-confirmation-overlay.show {
+      display: flex;
+    }
+    .clear-confirmation-popup {
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(59, 130, 246, 0.6);
+      border: 3px solid #fff;
+    }
+    .clear-confirmation-popup h2 {
+      color: #fff;
+      font-size: 1.6em;
+      margin-bottom: 20px;
+    }
+    .clear-confirmation-popup p {
+      color: #dbeafe;
+      font-size: 1.1em;
+      margin-bottom: 25px;
+    }
+    .clear-confirmation-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    .clear-confirmation-btn {
+      flex: 1;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #fff;
+    }
+    .clear-confirmation-btn.confirm {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+    }
+    .clear-confirmation-btn.confirm:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(220, 38, 38, 0.5);
+    }
+    .clear-confirmation-btn.cancel {
+      background: #6b7280;
+    }
+    .clear-confirmation-btn.cancel:hover {
+      background: #4b5563;
+    }
+    
+    /* ✅ Image Preview Modal */
+    .image-preview-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+    }
+    .image-preview-overlay.show {
+      display: flex;
+    }
+    .image-preview-container {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .image-preview-container img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      object-fit: contain;
+      cursor: default;
+    }
+    .image-preview-close {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid #fff;
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 1.5em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .image-preview-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 15, 30, 0.5); }
+    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+    
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        right: -300px;
+        height: 100vh;
+        z-index: 600;
+        transition: right 0.3s ease;
+        box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+        width: 280px;
+      }
+      .sidebar.open {
+        right: 0;
+      }
+      .sidebar-toggle-btn {
+        display: flex;
+      }
+      .sidebar-close-btn {
+        display: block;
+      }
+      .chat-main {
+        width: 100%;
+      }
+      .header h2 {
+        font-size: 1.1em;
+      }
+      .emoji-panel {
+        width: calc(100vw - 40px);
+        left: 20px;
+        right: 20px;
+      }
+      .bg-controls-panel {
+        width: calc(100vw - 40px);
+        left: 20px;
+        right: 20px;
+      }
+      .banned-panel {
+        width: calc(100vw - 40px);
+        left: 20px;
+        right: 20px;
+      }
+      .msg {
+        max-width: 80%;
+      }
+      .ban-type-popup {
+        max-width: 90%;
+      }
+      .ban-type-buttons {
+        flex-direction: column;
+      }
+      .player-panel {
+        height: 70vh;
+      }
+      .player-disconnect-btn {
+        padding: 6px 12px;
+        font-size: 0.8em;
+      }
+      .clear-confirmation-popup {
+        max-width: 90%;
+      }
+      .clear-confirmation-buttons {
+        flex-direction: column;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .header {
+        padding: 10px 15px;
+      }
+      .header h2 {
+        font-size: 1em;
+      }
+      .online-badge {
+        font-size: 0.75em;
+        padding: 4px 10px;
+      }
+      .input-area {
+        padding: 10px 15px;
+      }
+      .messages {
+        padding: 15px;
+      }
+      .player-panel {
+        height: 65vh;
+      }
+      .player-disconnect-btn {
+        padding: 5px 10px;
+        font-size: 0.75em;
+      }
+    }
+	/* ✅ Στυλ για το κουμπί φωτογραφίας */
+.image-btn {
+  background: none;
+  border: none;
+  color: #10b981;
+  cursor: pointer;
+  padding: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.image-btn:hover {
+  transform: scale(1.2) rotate(-5deg);
+  color: #34d399;
+  filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.7));
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.image-btn:active {
+  transform: scale(0.95);
+}
+
+.image-btn svg {
+  width: 30px;
+  height: 30px;
+  transition: all 0.3s ease;
+}
+.image-btn.loading {
+  pointer-events: none;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.image-btn.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+.image-btn .spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(16, 185, 129, 0.3);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+  </style>
+</head>
+<body>
+
+<div class="bg-container" id="bgContainer"></div>
+<div class="bg-overlay"></div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="ban-type-overlay" id="banTypeOverlay">
+  <div class="ban-type-popup">
+    <h2>🚫 Επιλογή Ban</h2>
+    <p id="banTypeText">Θέλεις να μπανάρεις τον χρήστη;</p>
+    <div class="ban-type-buttons">
+      <button class="ban-type-btn username" onclick="confirmBan()">❌ Ban Όνομα</button>
+      <button class="ban-type-btn cancel" onclick="cancelBan()">Ακύρωση</button>
+    </div>
+  </div>
+</div>
+
+<div class="ban-notification-overlay" id="banNotifOverlay">
+  <div class="ban-notification-popup">
+    <div class="ban-icon">🚫</div>
+    <h2>Έχεις γίνει Banned!</h2>
+    <p>Έχεις αποκλειστεί από τον διαχειριστή.</p>
+    <p style="font-size:0.9em;opacity:0.8;margin-top:15px;">Θα μεταφερθείς στην αρχική σελίδα...</p>
+  </div>
+</div>
+
+<div class="private-notification-overlay" id="privateNotifOverlay">
+  <div class="private-notification-popup" id="privateNotifPopup" onclick="acceptPrivateNotification()">
+    <h3>💬 Νέο Ιδιωτικό Μήνυμα!</h3>
+    <p id="privateNotifText">Κάποιος σου έστειλε ιδιωτικό μήνυμα</p>
+    <button class="accept-btn">Πάτα εδώ για να απαντήσεις</button>
+  </div>
+</div>
+
+<div class="clear-confirmation-overlay" id="clearConfirmationOverlay">
+  <div class="clear-confirmation-popup">
+    <h2>🗑️ Διαγραφή Μηνυμάτων</h2>
+    <p>Είσαι σίγουρος ότι θέλεις να διαγράψεις όλα τα μηνύματα;</p>
+    <div class="clear-confirmation-buttons">
+      <button class="clear-confirmation-btn confirm" onclick="confirmClearMessages()">✅ Ναι, διαγραφή</button>
+      <button class="clear-confirmation-btn cancel" onclick="hideClearConfirmation()">❌ Ακύρωση</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Image Preview Modal -->
+<div class="image-preview-overlay" id="imagePreviewOverlay" onclick="closeImagePreview(event)">
+  <div class="image-preview-container">
+    <button class="image-preview-close" onclick="closeImagePreview(event)">✕</button>
+    <img id="imagePreviewImg" src="" alt="Preview">
+  </div>
+</div>
+
+<div class="player-panel" id="playerPanel">
+  <div class="player-panel-header">
+    <div class="player-panel-title">📻 RadioChat Live - Ραδιόφωνο</div>
+    <div class="player-header-buttons">
+      <button class="player-disconnect-btn" onclick="disconnectPlayer()" title="Πλήρης αποσύνδεση ραδιοφώνου">🔌 Αποσύνδεση</button>
+      <button class="player-close-btn" onclick="closePlayer()" title="Κλείσιμο παραθύρου - ο ήχος συνεχίζει">🔽 Κλείσιμο παραθύρου</button>
+    </div>
+  </div>
+  <iframe id="playerIframe" src="" frameborder="0" allowtransparency="true" style="background: transparent;"></iframe>
+</div>
+
+<div class="login" id="loginDiv">
+  <div class="login-box">
+    <h1>💬 RadioChat Live</h1>
+    <input type="text" id="userIn" placeholder="Όνομα χρήστη">
+    <button onclick="goChat(false)">Είσοδος</button>
+    <div class="error" id="err"></div>
+  </div>
+</div>
+
+<div class="app" id="chatApp">
+  <div class="chat-main" id="chatMain">
+    <div class="private-header" id="privateHeader">
+      <div class="private-header-text">🔒 Ιδιωτική συνομιλία με <span id="privateWithUser">...</span></div>
+      <button class="exit-private-btn" onclick="closePrivateChat()">← Έξοδος από ιδιωτικό</button>
+    </div>
+    <div class="header" id="mainHeader">
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Εμφάνιση Χρηστών">☰</button>
+      <h2>💬 RadioChat Live</h2>
+      <div class="online-badge"><span style="color:#ff0000">●</span> <span id="onlineNum">0</span> online</div>
+    </div>
+    <div class="messages" id="msgContainer"></div>
+    <div class="input-area">
+      <div class="bg-controls-panel" id="bgControlsPanel">
+        <h3>⚙️ Ρυθμίσεις Background</h3>
+        <div class="control-group"><label>📍 Θέση (Αριστερά-Δεξιά)</label><input type="range" id="bgPositionX" min="0" max="100" value="50" oninput="updateBackground()"><div class="control-value" id="posValue">50%</div></div>
+        <div class="control-group"><label>☀️ Φωτεινότητα</label><input type="range" id="bgBrightness" min="0" max="200" value="100" oninput="updateBackground()"><div class="control-value" id="brightValue">100%</div></div>
+        <div class="control-group"><label>🌫️ Θολότητα (Blur)</label><input type="range" id="bgBlur" min="0" max="20" value="0" oninput="updateBackground()"><div class="control-value" id="blurValue">0px</div></div>
+        <div class="control-group"><label>Σκοτείνιασμα Overlay</label><input type="range" id="bgOverlay" min="0" max="100" value="70" oninput="updateBackground()"><div class="control-value" id="overlayValue">70%</div></div>
+      </div>
+      <div class="banned-panel" id="bannedPanel">
+        <div class="banned-panel-header"><h3>🚫 Banned Χρήστες</h3><button class="close-banned-btn" onclick="toggleBannedPanel()">×</button></div>
+        <div class="banned-users-list" id="bannedUsersList"><div class="no-banned">Φόρτωση...</div></div>
+      </div>
+      <div class="emoji-panel" id="emojiPanel">
+        <div class="emoji-tabs">
+          <button class="emoji-tab active" data-category="smileys">😀</button><button class="emoji-tab" data-category="animals">🐶</button><button class="emoji-tab" data-category="food">🍕</button><button class="emoji-tab" data-category="activities">⚽</button><button class="emoji-tab" data-category="travel">✈️</button><button class="emoji-tab" data-category="objects">💡</button><button class="emoji-tab" data-category="symbols">❤️</button>
+        </div>
+        <div class="emoji-content">
+          <div class="emoji-category active" id="smileys"></div><div class="emoji-category" id="animals"></div><div class="emoji-category" id="food"></div><div class="emoji-category" id="activities"></div><div class="emoji-category" id="travel"></div><div class="emoji-category" id="objects"></div><div class="emoji-category" id="symbols"></div>
+        </div>
+      </div>
+      <div class="input-wrapper">
+         <button class="image-btn" id="imageBtn" onclick="triggerImageUpload()" title="Ανέβασε φωτογραφία (max 3MB)">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+    <circle cx="12" cy="13" r="4"></circle>
+  </svg>
+</button>
+<button class="emoji-btn" onclick="toggleEmoji()">😀</button>
+        <input type="text" class="input-field" id="msgInput" placeholder="Γράψε ένα μήνυμα...">
+        
+        <button class="send-btn" onclick="sendMsg()" title="Αποστολή">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+        
+        <button class="sound-btn" id="soundBtn" onclick="toggleSound()" title="Ένταση Ήχου">🔊</button>
+        <button class="radio-btn" id="radioBtn" onclick="togglePlayer()" title="Ραδιόφωνο">📻</button>
+        <button class="banned-btn" id="bannedBtn" onclick="toggleBannedPanel()" title="Λίστα Banned Χρηστών">⛔</button>
+        <button class="bg-btn" onclick="toggleBgControls()">🎨</button>
+        <button class="clear-btn" id="clearBtn" onclick="showClearConfirmation()" title="Διαγραφή όλων των μηνυμάτων (μόνο Admin)">🗑️</button>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+  <h3 style="font-family: system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 700; font-size: 1.35em; letter-spacing: -0.6px; background: linear-gradient(90deg, #66ffc2, #ff66ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">👥 Χρήστες Online</h3>
+  <button class="sidebar-close-btn" onclick="closeSidebar()" title="Κλείσιμο">✕</button>
+</div>
+    <div class="user-count" style="padding: 0 20px 10px 20px;"><span id="userNum">0</span> άτομα</div>
+    <div class="user-list" id="userList"></div>
+    <div class="actions-area">
+      <button class="admin-btn" id="adminClearBtn" onclick="adminClearAll()">⚠️ Καθαρισμός Όλων</button>
+      <button class="logout-btn" onclick="logoutChat()">Αποσύνδεση</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+<input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/gif" style="display:none" onchange="handleImageUpload(event)">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  var client = null;
+  var currentUser = '';
+  var currentSessionId = '';
+  var channel = null;
+  var presenceChannel = null;
+  var privateChannel = null;
+  var banChannel = null;
+  var onlineUsers = {};
+  var userAvatars = {};
+  var isAdmin = false;
+  var currentPrivateChat = null;
+  var pendingPrivateNotif = null;
+  var bannedUsersList = [];
+  var pendingBanUsername = null;
+  
+  var isPlayerOpen = false;
+  var isPlayerLoaded = false;
+  
+  var skipNextOwnImage = false;
+  var skipNextOwnPrivateImage = false;
+  
+  var isAvatarUploading = false; // ✅ Flag για να κλειδώνει το avatar κατά το upload
+  
+  function togglePlayer() {
+    if (isPlayerOpen) {
+      closePlayer();
+    } else {
+      openPlayer();
+    }
+  }
+  
+  function openPlayer() {
+    if (!isPlayerLoaded) {
+      document.getElementById('playerIframe').src = 'player.html';
+      isPlayerLoaded = true;
+    }
+    document.getElementById('playerPanel').classList.add('show');
+    isPlayerOpen = true;
+    document.getElementById('radioBtn').classList.remove('playing');
+  }
+  
+  function closePlayer() {
+    document.getElementById('playerPanel').classList.remove('show');
+    isPlayerOpen = false;
+    if (isPlayerLoaded) {
+      document.getElementById('radioBtn').classList.add('playing');
+    }
+  }
+  
+  function disconnectPlayer() {
+    document.getElementById('playerPanel').classList.remove('show');
+    document.getElementById('playerIframe').src = '';
+    isPlayerOpen = false;
+    isPlayerLoaded = false;
+    document.getElementById('radioBtn').classList.remove('playing');
+  }
+  
+  function toggleSidebar() {
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+  }
+  
+  function closeSidebar() {
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+  }
+  
+  var notificationSound = new Audio('https://cdn.pixabay.com/audio/2024/02/08/audio_b7f03fb030.mp3');
+  var soundVolume = 1.0;
+  var soundStates = [{ volume: 1.0, icon: '🔊', title: 'Ήχος: Δυνατός' }, { volume: 0.3, icon: '🔉', title: 'Ήχος: Σιγανός' }, { volume: 0, icon: '🔇', title: 'Ήχος: Κλειστός' }];
+  var currentSoundState = 0;
+  
+  function loadSoundSettings() { var saved = localStorage.getItem('chat_sound_volume'); if (saved !== null) { currentSoundState = parseInt(saved); soundVolume = soundStates[currentSoundState].volume; notificationSound.volume = soundVolume; updateSoundButton(); } }
+  function updateSoundButton() { var btn = document.getElementById('soundBtn'); btn.textContent = soundStates[currentSoundState].icon; btn.title = soundStates[currentSoundState].title; }
+  function toggleSound() { currentSoundState = (currentSoundState + 1) % soundStates.length; soundVolume = soundStates[currentSoundState].volume; notificationSound.volume = soundVolume; localStorage.setItem('chat_sound_volume', currentSoundState); updateSoundButton(); }
+  function playNotificationSound() { if (soundVolume > 0) { notificationSound.currentTime = 0; notificationSound.play().catch(e => console.log('Sound play error:', e)); } }
+  
+  var emojiCategories = {
+    smileys: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🥳','😏','😒','😞','😔','😟','😕','🙁','😖','😫','😩','🥺','😭','😤','😠','😡','🤬','😳','🥶','😨','😰','😥','😓','🤗','🤔','🤫','😶','😐','😑','😬','🙄','😯','😧','😮','😲','😴','🤤','😵','🤐','🥴','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','💩','💀','☠️','👽','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊'],
+    animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🐣','🦆','🦅','🦉','🦇','🐺','🦄','🐝','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿️','🦔','🐾','🐉','🐲'],
+    food: ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕','🫒','🧄','🧅','🥔','🍠','🥐','🥖','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🌭','🍔','🍟','🍕','🫓','🥙','🌮','🌯','🫔','🥗','🥘','🫕','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍘','🍥','🥠','🥮','🍢','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🫗','🍼','🫖','☕','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊','🥄','🍴','🍽️','🥣','🥡','🥢','🧂'],
+    activities: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🤹','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🪘','🎷','🎺','🪗','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮','🎰','🧩'],
+    travel: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍️','🛵','🚲','🛴','🛺','🚨','🚔','🚍','🚖','🚘','🚡','🚠','🚟','🚃','🚋','🚞','🚝','🚄','🚅','🚈','🚇','🚆','🚉','✈️','🛫','🛬','🛩️','💺','🛰️','🚀','🛸','🚁','🛶','⛵','🚤','🛥️','🛳️','⛴️','🚢','⚓','🪝','⛽','🚧','🚦','🚥','🗺️','🗿','🗽','🗼','🏰','🏯','🏟️','🎡','🎢','🎠','⛲','⛱️','🏖️','🏝️','🏜️','🌋','⛰️','🏔️','🗻','🏕️','⛺','🛖','🏠','🏡','🏘️','🏚️','🏗️','🏭','🏢','🏬','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏩','💒','🏛️','⛪','🕌','🕍','🛕','🕋','⛩️','🛤️','🛣️','🗾','🎑','🏞️','🌅','🌄','🌠','🎇','🎆','🌇','🌆','🏙️','🌃','🌌','🌉','🌁'],
+    objects: ['⌚','📱','📲','💻','⌨️','🖥️','🖨️','🖱️','🖲️','🕹️','🗜️','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🎙️','🎚️','🎛️','🧭','⏱️','⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🔌','💡','🔦','🕯️','🪔','🧯','🛢️','💸','💵','💴','💶','💷','🪙','💰','💳','💎','⚖️','🪜','🧰','🪛','🔧','🔨','⚒️','🛠️','⛏️','🪚','🔩','⚙️','🪤','🧱','⛓️','🧲','🔫','💣','🧨','🪓','🔪','🗡️','⚔️','🛡️','🚬','⚰️','🪦','⚱️','🏺','🔮','📿','🧿','💈','⚗️','🔭','🔬','🕳️','🩹','🩺','💊','💉','🩸','🧬','🦠','🧫','🧪','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🪄','🪅','🎊','🎉','🎎','🏮','🎐','🧧','✉️','📩','📨','📧','💌','📥','📤','📦','🏷️','🪧','📪','📫','📬','📭','📮','📯','📜','📃','📄','📑','🧾','📊','📈','📉','🗒️','🗓️','📆','📅','🗑️','📇','🗃️','🗳️','🗄️','📋','📁','📂','🗂️','🗞️','📰','📓','📔','📒','📕','📗','📘','📙','📚','📖','🔖','🧷','🔗','📎','🖇️','📐','📏','🧮','📌','📍','✂️','🖊️','🖋️','✒️','🖌️','🖍️','📝','✏️','🔍','🔎','🔏','🔐','🔒','🔓'],
+    symbols: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🛗','🈳','🈂️','🛂','🛃','🛄','🛅','🚹','🚺','🚼','⚧️','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🆖','🆗','🆙','🆒','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔢','#️⃣','*️⃣','⏏️','▶️','⏸️','⏯️','⏹️','⏺️','⏭️','⏮️','⏩','⏪','⏫','⏬','◀️',' 🔼',' 🔽','➡️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↪️','↩️','⤴️','⤵️','🔀','🔁','🔂','🔄','🔃','🎵','🎶','➕','➖','➗','✖️','♾️','💲','💱','™️','©️','®️','👁️‍🗨️','🔚','🔙','🔛','🔝','🔜','〰️','➰','➿','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📣','📢','👁️‍🗨️','💬','💭','🗯️','♠️','♣️','♥️','♦️','🃏','🎴','🀄','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛']
+  };
+
+if (!localStorage.getItem('chat_device_unique_id')) { var fixedId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(); localStorage.setItem('chat_device_unique_id', fixedId); }
+currentSessionId = localStorage.getItem('chat_device_unique_id');
+
+Object.keys(emojiCategories).forEach(category => { var container = document.getElementById(category); emojiCategories[category].forEach(emoji => { var span = document.createElement('span'); span.className = 'emoji'; span.textContent = emoji; span.onclick = function() { document.getElementById('msgInput').value += emoji; document.getElementById('msgInput').focus(); }; container.appendChild(span); }); });
+document.querySelectorAll('.emoji-tab').forEach(tab => { tab.addEventListener('click', function() { document.querySelectorAll('.emoji-tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.emoji-category').forEach(c => c.classList.remove('active')); this.classList.add('active'); document.getElementById(this.dataset.category).classList.add('active'); }); });
+
+function toggleBgControls() { document.getElementById('bgControlsPanel').classList.toggle('show'); document.getElementById('bannedPanel').classList.remove('show'); }
+function updateBackground() { var posX = document.getElementById('bgPositionX').value; var brightness = document.getElementById('bgBrightness').value; var blur = document.getElementById('bgBlur').value; var overlay = document.getElementById('bgOverlay').value; document.getElementById('bgContainer').style.backgroundPosition = posX + '% center'; document.getElementById('bgContainer').style.filter = 'brightness(' + brightness + '%) blur(' + blur + 'px)'; document.querySelector('.bg-overlay').style.background = 'rgba(15, 15, 30, ' + (overlay / 100) + ')'; document.getElementById('posValue').textContent = posX + '%'; document.getElementById('brightValue').textContent = brightness + '%'; document.getElementById('blurValue').textContent = blur + 'px'; document.getElementById('overlayValue').textContent = overlay + '%'; localStorage.setItem('bg_settings', JSON.stringify({ posX, brightness, blur, overlay })); }
+function loadBgSettings() { var saved = localStorage.getItem('bg_settings'); if (saved) { var s = JSON.parse(saved); document.getElementById('bgPositionX').value = s.posX || 50; document.getElementById('bgBrightness').value = s.brightness || 100; document.getElementById('bgBlur').value = s.blur || 0; document.getElementById('bgOverlay').value = s.overlay || 70; updateBackground(); } }
+
+// ✅ ΝΕΑ ΣΥΝΑΡΤΗΣΗ: Συμπίεση εικόνας
+async function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var width = img.width;
+        var height = img.height;
+        
+        // Υπολογισμός νέων διαστάσεων
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        var compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressed);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function checkIfBanned(username) { try { var result = await client.from('banned_users').select('username').eq('username', username.toLowerCase()).eq('ban_type', 'username').maybeSingle(); if (result.data) return true; return false; } catch(e) { console.error('Ban check error:', e); return false; } }
+async function banUser(username) { pendingBanUsername = username; document.getElementById('banTypeText').textContent = `Θέλεις να μπανάρεις τον "${username}";`; document.getElementById('banTypeOverlay').classList.add('show'); }
+async function confirmBan() { if (!pendingBanUsername) return; document.getElementById('banTypeOverlay').classList.remove('show'); var username = pendingBanUsername; pendingBanUsername = null; try { await client.from('banned_users').insert([{ username: username.toLowerCase(), banned_by: currentUser, ban_type: 'username' }]); try { await client.from('active_sessions').delete().eq('username', username); } catch(e) { console.error('Session delete error:', e); } alert('✅ Ο χρήστης "' + username + '" έγινε banned!'); loadBannedUsers(); } catch(e) { if (e.message && e.message.includes('duplicate')) { alert('⚠️ Ο χρήστης είναι ήδη banned!'); } else { alert('Σφάλμα: ' + e.message); } } }
+function cancelBan() { pendingBanUsername = null; document.getElementById('banTypeOverlay').classList.remove('show'); }
+async function unbanUser(username) { if (!confirm('✅ Θέλεις να αφαιρέσεις το ban από τον χρήστη "' + username + '";')) return; try { await client.from('banned_users').delete().eq('username', username.toLowerCase()); alert('✅ Το ban από τον "' + username + '" αφαιρέθηκε!'); loadBannedUsers(); renderBannedUsersPanel(); } catch(e) { alert('Σφάλμα: ' + e.message); } }
+async function loadBannedUsers() { try { var result = await client.from('banned_users').select('*').order('banned_at', { ascending: false }); if (result.data) { bannedUsersList = result.data; } } catch(e) { console.error('Load banned error:', e); bannedUsersList = []; } }
+function renderBannedUsersPanel() { var list = document.getElementById('bannedUsersList'); list.innerHTML = ''; if (bannedUsersList.length === 0) { list.innerHTML = '<div class="no-banned">Δεν υπάρχουν banned χρήστες 🎉</div>'; return; } bannedUsersList.forEach(ban => { var div = document.createElement('div'); div.className = 'banned-user-item'; var time = new Date(ban.banned_at).toLocaleString('el', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); div.innerHTML = `<div class="banned-user-info"><div class="banned-user-name">🚫 ${escapeHtml(ban.username)}</div><div class="banned-user-time">${time}</div><div class="banned-user-by">από: ${escapeHtml(ban.banned_by)}</div></div><button class="unban-btn" onclick="unbanUser('${escapeHtml(ban.username)}')">✅ Αφαίρεση</button>`; list.appendChild(div); }); }
+function toggleBannedPanel() { var panel = document.getElementById('bannedPanel'); panel.classList.toggle('show'); document.getElementById('bgControlsPanel').classList.remove('show'); document.getElementById('emojiPanel').classList.remove('show'); if (panel.classList.contains('show')) { loadBannedUsers().then(() => renderBannedUsersPanel()); } }
+function handleBannedWhileOnline() { document.getElementById('banNotifOverlay').classList.add('show'); setTimeout(async () => { try { if (presenceChannel) await presenceChannel.untrack(); if (channel) await channel.unsubscribe(); if (privateChannel) await privateChannel.unsubscribe(); if (banChannel) await banChannel.unsubscribe(); try { await client.from('active_sessions').delete().eq('username', currentUser); } catch(e) {} } catch(e) { console.error('Cleanup error:', e); } localStorage.removeItem('chat_username'); currentUser = ''; isAdmin = false; currentPrivateChat = null; document.getElementById('chatApp').style.display = 'none'; document.getElementById('banNotifOverlay').classList.remove('show'); document.getElementById('loginDiv').style.display = 'flex'; document.getElementById('userIn').value = ''; var err = document.getElementById('err'); err.textContent = '🚫 Είσαι banned!'; err.className = 'error banned-error'; err.style.display = 'block'; }, 3000); }
+function subscribeToBans() { banChannel = client.channel('banned-users-channel').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'banned_users' }, async payload => { var bannedUsername = payload.new.username.toLowerCase(); if (bannedUsername === currentUser.toLowerCase()) { handleBannedWhileOnline(); } }).on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'banned_users' }, async payload => { if (isAdmin && document.getElementById('bannedPanel').classList.contains('show')) { await loadBannedUsers(); renderBannedUsersPanel(); } }).subscribe(); }
+
+// ✅ ΤΡΟΠΟΠΟΙΗΜΕΝΗ: Με συμπίεση + spinner στο avatar
+async function handleAvatarUpload(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  
+  // Έλεγχος αν ήδη ανεβαίνει
+  if (isAvatarUploading) {
+    alert('⏳ Περιμένετε να ολοκληρωθεί η προηγούμενη φόρτωση!');
+    event.target.value = '';
+    return;
+  }
+  
+  if (file.size > 3 * 1024 * 1024) {
+    alert('Η φωτογραφία πρέπει να είναι μικρότερη από 3MB!');
+    event.target.value = '';
+    return;
+  }
+  
+  isAvatarUploading = true;
+  
+  // Βρίσκουμε το avatar element του χρήστη στη λίστα
+  var userItems = document.querySelectorAll('.user-item');
+  var userAvatarEl = null;
+  userItems.forEach(item => {
+    var nameEl = item.querySelector('.user-name');
+    if (nameEl && nameEl.textContent === currentUser) {
+      userAvatarEl = item.querySelector('.avatar');
+    }
+  });
+  
+  // Αποθηκεύουμε το αρχικό HTML και βάζουμε spinner
+  var originalAvatarHTML = userAvatarEl ? userAvatarEl.innerHTML : '';
+  if (userAvatarEl) {
+    userAvatarEl.classList.add('loading');
+    userAvatarEl.innerHTML = '<div class="avatar-spinner"></div>';
+  }
+  
+  try {
+    // ✅ Συμπίεση εικόνας (200x200, ποιότητα 0.7)
+    var compressed = await compressImage(file, 200, 200, 0.7);
+    
+    await client.from('user_avatars').upsert([{ username: currentUser.toLowerCase(), avatar_url: compressed }]);
+    userAvatars[currentUser.toLowerCase()] = compressed;
+    localStorage.setItem('user_avatar_' + currentUser.toLowerCase(), compressed);
+    await presenceChannel.track({ username: currentUser, avatar: compressed });
+    
+    // Ενημέρωση UI
+    updateUserList();
+    alert('✅ Η φωτογραφία σου ενημερώθηκε!');
+  } catch(err) {
+    alert('Σφάλμα: ' + err.message);
+    // Επαναφορά στο αρχικό avatar
+    if (userAvatarEl) {
+      userAvatarEl.classList.remove('loading');
+      userAvatarEl.innerHTML = originalAvatarHTML;
+    }
+  } finally {
+    isAvatarUploading = false;
+    event.target.value = '';
+  }
+}
+
+async function ensureAvatarsLoaded(usernames) {
+  var toFetch = usernames.filter(u => { var lower = u.toLowerCase(); return !userAvatars[lower] && !localStorage.getItem('user_avatar_' + lower); });
+  if (toFetch.length === 0) return;
+  try { var result = await client.from('user_avatars').select('*').in('username', toFetch.map(u => u.toLowerCase())); if (result.data) { result.data.forEach(row => { var uname = row.username.toLowerCase(); userAvatars[uname] = row.avatar_url; localStorage.setItem('user_avatar_' + uname, row.avatar_url); }); } } catch(e) { console.error('Avatar fetch error:', e); }
+}
+
+window.addEventListener('load', async function() {
+  loadBgSettings(); loadSoundSettings();
+  client = window.supabase.createClient('https://hfnzcltouedgzcsykszq.supabase.co', 'sb_publishable_1j17Xud6lcKS5ZF3FLbgVg_m-7nfTe8');
+  setupPresenceInitial();
+  var savedUser = localStorage.getItem('chat_username');
+  if (savedUser) { document.getElementById('userIn').value = savedUser; setTimeout(() => goChat(true), 300); }
+});
+
+function escapeHtml(text) { var div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+function getAvatarHtml(username) { var lower = username.toLowerCase(); var initial = username.charAt(0).toUpperCase(); var avatarUrl = userAvatars[lower] || localStorage.getItem('user_avatar_' + lower); if (avatarUrl) { return `<div class="msg-avatar"><img src="${avatarUrl}" alt="${escapeHtml(username)}"></div>`; } return `<div class="msg-avatar">${initial}</div>`; }
+
+async function loadMessages() { var result = await client.from('messages').select('*').order('timestamp', { ascending: true }).limit(100); if (result.error) throw result.error; var uniqueUsers = [...new Set(result.data.map(msg => msg.user))]; await ensureAvatarsLoaded(uniqueUsers); var container = document.getElementById('msgContainer'); container.innerHTML = ''; result.data.forEach(msg => addMessageToUI(msg, false)); container.scrollTop = container.scrollHeight; }
+async function loadPrivateMessages(otherUser) { try { var result = await client.from('private_messages').select('*').or(`sender.eq.${currentUser},receiver.eq.${currentUser}`).order('timestamp', { ascending: true }).limit(200); if (result.error) { console.error('Private messages error:', result.error); alert('Σφάλμα: ' + result.error.message); return; } var filtered = result.data.filter(msg => (msg.sender.toLowerCase() === currentUser.toLowerCase() && msg.receiver.toLowerCase() === otherUser.toLowerCase()) || (msg.sender.toLowerCase() === otherUser.toLowerCase() && msg.receiver.toLowerCase() === currentUser.toLowerCase())); var uniqueUsers = [...new Set(filtered.map(msg => msg.sender))]; await ensureAvatarsLoaded(uniqueUsers); var container = document.getElementById('msgContainer'); container.innerHTML = ''; filtered.forEach(msg => addMessageToUI(msg, true)); container.scrollTop = container.scrollHeight; var unreadIds = filtered.filter(msg => msg.receiver.toLowerCase() === currentUser.toLowerCase() && !msg.is_read).map(msg => msg.id); if (unreadIds.length > 0) { await client.from('private_messages').update({ is_read: true }).in('id', unreadIds); } } catch(e) { console.error('Load private messages error:', e); } }
+
+function addMessageToUI(msg, isPrivate) {
+  var container = document.getElementById('msgContainer');
+  var div = document.createElement('div');
+  
+  var senderName = msg.user || msg.sender || "Άγνωστος";
+  var text = msg.text || msg.message || "";
+  var img = msg.image_data || null;
+  
+  var isOwn = senderName.toLowerCase() === currentUser.toLowerCase();
+  div.className = 'msg' + (isOwn ? ' own' : '') + (isPrivate ? ' private' : '');
+  
+  var avatarHtml = getAvatarHtml(senderName);
+  var time = new Date(msg.timestamp || Date.now()).toLocaleTimeString('el', { hour: '2-digit', minute: '2-digit' });
+  
+  var contentHtml = img 
+    ? `<div class="text"><img src="${img}" style="max-width:200px; border-radius:8px; display:block; margin:5px 0;"></div>`
+    : `<div class="text">${escapeHtml(text)}</div>`;
+
+  div.innerHTML = `${avatarHtml}<div class="msg-content"><div class="user">${escapeHtml(senderName)}</div>${contentHtml}<div class="time">${time}</div></div>`;
+  
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendMsg() { var input = document.getElementById('msgInput'); var text = input.value.trim(); if (!text) return; try { if (currentPrivateChat) { await client.from('private_messages').insert([{ sender: currentUser, receiver: currentPrivateChat, message: text }]); } else { await client.from('messages').insert([{ user: currentUser, text: text }]); } input.value = ''; } catch(e) { console.error('Send error:', e); alert('Σφάλμα: ' + e.message); } }
+function toggleEmoji() { document.getElementById('emojiPanel').classList.toggle('show'); document.getElementById('bannedPanel').classList.remove('show'); document.getElementById('bgControlsPanel').classList.remove('show'); }
+
+function updateUserList() { var users = Object.keys(onlineUsers).sort(); var list = document.getElementById('userList'); list.innerHTML = ''; users.forEach(username => { var div = document.createElement('div'); div.className = 'user-item'; var initial = username.charAt(0).toUpperCase(); var avatarHtml = userAvatars[username.toLowerCase()] ? `<div class="avatar" onclick="triggerAvatarUpload('${username}')"><img src="${userAvatars[username.toLowerCase()]}" alt="avatar">${username === currentUser ? '<div class="avatar-upload-hint">📷</div>' : ''}</div>` : `<div class="avatar" onclick="triggerAvatarUpload('${username}')">${initial}${username === currentUser ? '<div class="avatar-upload-hint">📷</div>' : ''}</div>`; var lockBtn = ''; var banBtn = ''; if (username !== currentUser) { lockBtn = `<button class="private-lock-btn" onclick="startPrivateChat('${username}')" title="Ιδιωτικό">🔒</button>`; if (isAdmin) { banBtn = `<button class="ban-user-btn show" onclick="banUser('${username}')" title="Ban">🚫</button>`; } } div.innerHTML = `${avatarHtml}<div class="user-info"><div class="user-name">${escapeHtml(username)}</div><div class="user-status">Online</div></div>${lockBtn}${banBtn}`; list.appendChild(div); }); document.getElementById('onlineNum').textContent = users.length; document.getElementById('userNum').textContent = users.length; }
+
+function triggerAvatarUpload(username) { 
+  if (isAvatarUploading) {
+    alert('⏳ Περιμένετε να ολοκληρωθεί η φόρτωση!');
+    return;
+  }
+  if (username === currentUser) document.getElementById('avatarInput').click(); 
+}
+function triggerImageUpload() { document.getElementById('imageUploadInput').click(); }
+function startPrivateChat(username) { if (username === currentUser) return; if (!onlineUsers[username]) { alert('Ο χρήστης δεν είναι online!'); return; } currentPrivateChat = username; document.getElementById('chatMain').classList.add('private-mode'); document.getElementById('privateHeader').classList.add('show'); document.getElementById('mainHeader').style.display = 'none'; document.getElementById('privateWithUser').textContent = username; document.getElementById('msgInput').placeholder = 'Γράψε ιδιωτικό...'; document.getElementById('emojiPanel').classList.remove('show'); if (window.innerWidth <= 768) { closeSidebar(); } loadPrivateMessages(username); }
+function closePrivateChat() { currentPrivateChat = null; document.getElementById('chatMain').classList.remove('private-mode'); document.getElementById('privateHeader').classList.remove('show'); document.getElementById('mainHeader').style.display = 'flex'; document.getElementById('msgInput').placeholder = 'Γράψε ένα μήνυμα...'; loadMessages(); }
+
+// ✅ ΤΡΟΠΟΠΟΙΗΜΕΝΗ: Με συμπίεση εικόνας
+async function handleImageUpload(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+    alert('Μόνο JPG, PNG, GIF!');
+    event.target.value = '';
+    return;
+  }
+  
+  // ✅ Έλεγχος μεγέθους ανά τύπο
+  if (file.type === 'image/gif') {
+    if (file.size > 1 * 1024 * 1024) {
+      alert('Το GIF είναι πολύ μεγάλο (max 1MB). Παρακαλώ επιλέξτε μικρότερο GIF για να διατηρηθεί η κίνηση!');
+      event.target.value = '';
+      return;
+    }
+  } else {
+    if (file.size > 3 * 1024 * 1024) {
+      alert('Η φωτογραφία ξεπερνά το όριο των 3MB!');
+      event.target.value = '';
+      return;
+    }
+  }
+  
+  var imageBtn = document.getElementById('imageBtn');
+  var originalHTML = imageBtn.innerHTML;
+  imageBtn.innerHTML = '<div class="spinner"></div>';
+  imageBtn.classList.add('loading');
+  
+  try {
+    var finalImageData;
+    
+    // ✅ GIF → ως έχει (για να διατηρηθεί η κίνηση)
+    if (file.type === 'image/gif') {
+      var reader = new FileReader();
+      finalImageData = await new Promise((resolve, reject) => {
+        reader.onload = function(e) { resolve(e.target.result); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    } else {
+      // ✅ JPG/PNG → συμπίεση
+      finalImageData = await compressImage(file, 800, 800, 0.75);
+    }
+    
+    var timestamp = new Date().toISOString();
+    if (currentPrivateChat) {
+      await client.from('private_messages').insert([{
+        sender: currentUser,
+        receiver: currentPrivateChat,
+        message: '[📸 Εικόνα]',
+        image_data: finalImageData
+      }]);
+      var msgData = {
+        sender: currentUser,
+        receiver: currentPrivateChat,
+        message: '[📸 Εικόνα]',
+        image_data: finalImageData,
+        timestamp: timestamp
+      };
+      addMessageToUI(msgData, true);
+      skipNextOwnPrivateImage = true;
+    } else {
+      await client.from('messages').insert([{
+        user: currentUser,
+        text: '[📸 Εικόνα]',
+        image_data: finalImageData,
+        timestamp: timestamp
+      }]);
+      var msgData = {
+        user: currentUser,
+        text: '[📸 Εικόνα]',
+        image_data: finalImageData,
+        timestamp: timestamp
+      };
+      addMessageToUI(msgData, false);
+      skipNextOwnImage = true;
+    }
+  } catch(e) {
+    console.error('Image error:', e);
+    alert('Σφάλμα αποστολής εικόνας: ' + e.message);
+  } finally {
+    imageBtn.innerHTML = originalHTML;
+    imageBtn.classList.remove('loading');
+    event.target.value = '';
+  }
+}
+
+function showPrivateNotification(sender) { if (pendingPrivateNotif) return; pendingPrivateNotif = sender; document.getElementById('privateNotifText').textContent = 'Ο ' + sender + ' σου έστειλε ιδιωτικό!'; document.getElementById('privateNotifOverlay').classList.add('show'); }
+function acceptPrivateNotification() { if (pendingPrivateNotif) { var sender = pendingPrivateNotif; pendingPrivateNotif = null; document.getElementById('privateNotifOverlay').classList.remove('show'); startPrivateChat(sender); } }
+
+function subscribeToMessages() {
+  channel = client.channel('radiochat-messages')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async payload => {
+      await ensureAvatarsLoaded([payload.new.user]);
+      
+      if (skipNextOwnImage && payload.new.user === currentUser && payload.new.text === '[📸 Εικόνα]') {
+        skipNextOwnImage = false;
+        return;
+      }
+      
+      if (!currentPrivateChat) {
+        addMessageToUI(payload.new, false);
+        if (payload.new.user.toLowerCase() !== currentUser.toLowerCase()) {
+          playNotificationSound();
+        }
+      }
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, async payload => {
+      if (!currentPrivateChat) {
+        document.getElementById('msgContainer').innerHTML = '';
+      }
+    })
+    .subscribe();
+  
+  privateChannel = client.channel('radiochat-private')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, async payload => {
+      var msg = payload.new;
+      await ensureAvatarsLoaded([msg.sender]);
+      
+      if (skipNextOwnPrivateImage && msg.sender === currentUser && msg.message === '[📸 Εικόνα]') {
+        skipNextOwnPrivateImage = false;
+        return;
+      }
+      
+      var isForMe = msg.receiver.toLowerCase() === currentUser.toLowerCase();
+      var isFromMe = msg.sender.toLowerCase() === currentUser.toLowerCase();
+      if (isForMe || isFromMe) {
+        if (currentPrivateChat && currentPrivateChat.toLowerCase() === msg.sender.toLowerCase()) {
+          addMessageToUI(msg, true);
+          if (isForMe) {
+            await client.from('private_messages').update({ is_read: true }).eq('id', msg.id);
+          }
+        } else if (isForMe) {
+          showPrivateNotification(msg.sender);
+        }
+      }
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'private_messages' }, async payload => {
+      if (currentPrivateChat) {
+        document.getElementById('msgContainer').innerHTML = '';
+      }
+    })
+    .subscribe();
+}
+
+function setupPresenceInitial() { presenceChannel = client.channel('presence-chat').on('presence', { event: 'sync' }, () => { var state = presenceChannel.presenceState(); onlineUsers = {}; Object.keys(state).forEach(key => { state[key].forEach(p => { if (p.username) { onlineUsers[p.username] = true; if (p.avatar) { var lower = p.username.toLowerCase(); userAvatars[lower] = p.avatar; localStorage.setItem('user_avatar_' + lower, p.avatar); } } }); }); updateUserList(); }).subscribe(); }
+
+async function goChat(isAutoLogin = false) { var inputVal = document.getElementById('userIn').value.trim(); var err = document.getElementById('err'); err.style.display = 'none'; if (!inputVal) return; var username = inputVal.includes(":") ? inputVal.split(":")[0].trim() : inputVal; var password = inputVal.includes(":") ? inputVal.split(":")[1].trim() : ""; var isBanned = await checkIfBanned(username); if (isBanned) { err.textContent = '🚫 Banned!'; err.style.display = 'block'; if (isAutoLogin) localStorage.removeItem('chat_username'); return; } if (username.toLowerCase() === "sakis" && password !== "019630") { if (isAutoLogin) localStorage.removeItem('chat_username'); else { err.textContent = 'Λάθος κωδικός!'; err.style.display = 'block'; } return; } try { const { data: existing } = await client.from('active_sessions').select('session_id').eq('username', username).maybeSingle(); if (existing) { if (existing.session_id !== currentSessionId) { err.textContent = 'Το όνομα είναι κλειδωμένο!'; err.style.display = 'block'; return; } } else { await client.from('active_sessions').insert([{ username: username, session_id: currentSessionId }]); } currentUser = username; localStorage.setItem('chat_username', inputVal); if (currentUser.toLowerCase() === "sakis") { isAdmin = true; document.getElementById('adminClearBtn').style.display = 'block'; document.getElementById('bannedBtn').classList.add('show'); document.getElementById('clearBtn').classList.add('show'); } else { isAdmin = false; document.getElementById('clearBtn').classList.remove('show'); } var trackData = { username: currentUser }; var localAvatar = localStorage.getItem('user_avatar_' + currentUser.toLowerCase()); if (localAvatar) { userAvatars[currentUser.toLowerCase()] = localAvatar; trackData.avatar = localAvatar; } await presenceChannel.track(trackData); document.getElementById('loginDiv').style.display = 'none'; document.getElementById('chatApp').style.display = 'flex'; document.getElementById('msgInput').focus(); await loadMessages(); subscribeToMessages(); subscribeToBans(); } catch(e) { err.textContent = 'Σφάλμα: ' + e.message; err.style.display = 'block'; } }
+
+async function adminClearAll() { if (!isAdmin) return; if (!confirm("⚠️ Διαγραφή ονομάτων;")) return; try { await client.from('active_sessions').delete().neq('username', '---'); alert("✅ Έγινε!"); } catch(e) { alert("Σφάλμα: " + e.message); } }
+async function logoutChat() { if (!confirm("⚠️ Προσοχή: Αν αποσυνδεθείτε, χάνετε τη δέσμευση του ονόματός σας. Αν κάποιος άλλος το πάρει, δεν θα μπορείτε να εισέλθετε ξανά με αυτό το όνομα. Επιβεβαιώνετε;")) return; document.getElementById('playerIframe').src = ''; document.getElementById('playerPanel').classList.remove('show'); isPlayerOpen = false; try { await client.from('active_sessions').delete().eq('username', currentUser); } catch(e) {} if (presenceChannel) await presenceChannel.untrack(); localStorage.removeItem('chat_username'); currentUser = ''; document.getElementById('chatApp').style.display = 'none'; document.getElementById('loginDiv').style.display = 'flex'; }
+function showClearConfirmation() { if (!isAdmin) return; document.getElementById('clearConfirmationOverlay').classList.add('show'); }
+function hideClearConfirmation() { document.getElementById('clearConfirmationOverlay').classList.remove('show'); }
+async function confirmClearMessages() { if (!isAdmin) return; hideClearConfirmation(); try { const { error } = await client.from('messages').delete().neq('id', 0); if (error) throw error; document.getElementById('msgContainer').innerHTML = ''; alert('✅ Διαγράφηκαν!'); } catch(e) { alert('Σφάλμα: ' + e.message); } }
+
+function openImagePreview(imgSrc) {
+  var overlay = document.getElementById('imagePreviewOverlay');
+  var img = document.getElementById('imagePreviewImg');
+  img.src = imgSrc;
+  overlay.classList.add('show');
+}
+
+function closeImagePreview(event) {
+  if (event.target.id === 'imagePreviewOverlay' || event.target.classList.contains('image-preview-close')) {
+    document.getElementById('imagePreviewOverlay').classList.remove('show');
+  }
+}
+
+document.addEventListener('dblclick', function(e) {
+  var img = e.target;
+  if (img.tagName === 'IMG' && img.closest('.msg .text')) {
+    e.preventDefault();
+    openImagePreview(img.src);
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('imagePreviewOverlay').classList.remove('show');
+  }
+});
+
+document.getElementById('userIn').addEventListener('keypress', e => { if (e.key === 'Enter') goChat(); });
+document.getElementById('msgInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendMsg(); });
+</script>
+</body>
+</html>
