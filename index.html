@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadioChat Live</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg-container" id="bgContainer"></div>
+<div class="bg-overlay"></div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="ban-type-overlay" id="banTypeOverlay">
+  <div class="ban-type-popup">
+    <h2>🚫 Επιλογή Ban</h2>
+    <p id="banTypeText">Θέλεις να μπανάρεις τον χρήστη;</p>
+    <div class="ban-type-buttons">
+      <button class="ban-type-btn username" onclick="confirmBan()">❌ Ban</button>
+      <button class="ban-type-btn cancel" onclick="cancelBan()">Ακύρωση</button>
+    </div>
+  </div>
+</div>
+
+<div class="ban-notification-overlay" id="banNotifOverlay">
+  <div class="ban-notification-popup">
+    <div class="ban-icon">🚫</div>
+    <h2>Έχεις γίνει Banned!</h2>
+    <p>Έχεις αποκλειστεί από τον διαχειριστή.</p>
+  </div>
+</div>
+
+<div class="private-notification-overlay" id="privateNotifOverlay">
+  <div class="private-notification-popup" onclick="acceptPrivateNotification()">
+    <h3>💬 Νέο Ιδιωτικό Μήνυμα!</h3>
+    <p id="privateNotifText">Κάποιος σου έστειλε ιδιωτικό</p>
+    <button class="accept-btn">Πάτα εδώ</button>
+  </div>
+</div>
+
+<div class="clear-confirmation-overlay" id="clearConfirmationOverlay">
+  <div class="clear-confirmation-popup">
+    <h2>🗑️ Διαγραφή Μηνυμάτων</h2>
+    <p>Διαγραφή όλων των μηνυμάτων;</p>
+    <div class="clear-confirmation-buttons">
+      <button class="clear-confirmation-btn confirm" onclick="confirmClearMessages()">✅ Ναι</button>
+      <button class="clear-confirmation-btn cancel" onclick="hideClearConfirmation()">❌ Όχι</button>
+    </div>
+  </div>
+</div>
+
+<div class="image-preview-overlay" id="imagePreviewOverlay" onclick="closeImagePreview(event)">
+  <div class="image-preview-container">
+    <button class="image-preview-close" onclick="closeImagePreview(event)">✕</button>
+    <img id="imagePreviewImg" src="" alt="">
+  </div>
+</div>
+
+<div class="tv-live-window" id="tvLiveWindow">
+  <div class="tv-live-window-header" id="tvLiveWindowHeader">
+    <div class="tv-live-window-title">📺 TV Live</div>
+    <div class="tv-live-window-controls">
+      <button class="tv-live-window-btn close-btn" onclick="closeTvLiveWindow()" title="Κλείσιμο">✕</button>
+    </div>
+  </div>
+  <iframe id="tvLiveIframe" src="" allowfullscreen></iframe>
+</div>
+
+<div class="player-panel" id="playerPanel">
+  <div class="player-panel-header">
+    <div class="player-panel-title">📻 RadioChat Live - Ραδιόφωνο</div>
+    <div class="player-header-buttons">
+      <button class="player-disconnect-btn" onclick="disconnectPlayer()">🔌 Αποσύνδεση</button>
+      <button class="player-close-btn" onclick="closePlayer()">🔽 Κλείσιμο παραθύρου</button>
+    </div>
+  </div>
+  <iframe id="playerIframe" src="" frameborder="0" allowtransparency="true" style="background: transparent;"></iframe>
+</div>
+
+<div class="login" id="loginDiv">
+  <div class="login-box">
+    <h1>💬 RadioChat Live</h1>
+    <input type="text" id="userIn" placeholder="Όνομα χρήστη" autocomplete="username">
+    <input type="password" id="passIn" placeholder="Κωδικός" autocomplete="current-password">
+    <button onclick="goChat(false)">Είσοδος</button>
+    <button class="register-btn" onclick="registerUser()">Εγγραφή Νέου Λογαριασμού</button>
+    <div class="error" id="err"></div>
+  </div>
+</div>
+
+<div class="app" id="chatApp">
+  <div class="chat-main" id="chatMain">
+    <div class="private-header" id="privateHeader">
+      <div class="private-header-text">🔒 Ιδιωτική με <span id="privateWithUser">...</span></div>
+      <button class="exit-private-btn" onclick="closePrivateChat()">← Έξοδος</button>
+    </div>
+    <div class="header" id="mainHeader">
+      <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()">☰</button>
+      <h2>💬 RadioChat Live</h2>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="online-badge"><span style="color:#ff0000">●</span> <span id="onlineNum">0</span> online</div>
+        <button class="tv-live-btn" onclick="toggleTvLiveWindow()">📺 TV Live</button>
+      </div>
+    </div>
+    <div class="messages" id="msgContainer"></div>
+    <div class="input-area">
+      <div class="bg-controls-panel" id="bgControlsPanel">
+        <h3>⚙️ Background</h3>
+        <div class="control-group"><label>📍 Θέση</label><input type="range" id="bgPositionX" min="0" max="100" value="50" oninput="updateBackground()"><div class="control-value" id="posValue">50%</div></div>
+        <div class="control-group"><label>☀️ Φωτεινότητα</label><input type="range" id="bgBrightness" min="0" max="200" value="100" oninput="updateBackground()"><div class="control-value" id="brightValue">100%</div></div>
+        <div class="control-group"><label>🌫️ Θολότητα</label><input type="range" id="bgBlur" min="0" max="20" value="0" oninput="updateBackground()"><div class="control-value" id="blurValue">0px</div></div>
+        <div class="control-group"><label>Σκοτείνιασμα</label><input type="range" id="bgOverlay" min="0" max="100" value="70" oninput="updateBackground()"><div class="control-value" id="overlayValue">70%</div></div>
+      </div>
+      <div class="banned-panel" id="bannedPanel">
+        <div class="banned-panel-header"><h3>🚫 Banned</h3><button class="close-banned-btn" onclick="toggleBannedPanel()">×</button></div>
+        <div class="banned-users-list" id="bannedUsersList"><div class="no-banned">Φόρτωση...</div></div>
+      </div>
+      <div class="emoji-panel" id="emojiPanel">
+        <div class="emoji-tabs">
+          <button class="emoji-tab active" data-category="smileys">😀</button>
+          <button class="emoji-tab" data-category="animals">🐶</button>
+          <button class="emoji-tab" data-category="food">🍕</button>
+          <button class="emoji-tab" data-category="activities">⚽</button>
+          <button class="emoji-tab" data-category="travel">✈️</button>
+          <button class="emoji-tab" data-category="objects">💡</button>
+          <button class="emoji-tab" data-category="symbols">❤️</button>
+        </div>
+        <div class="emoji-content">
+          <div class="emoji-category active" id="smileys"></div>
+          <div class="emoji-category" id="animals"></div>
+          <div class="emoji-category" id="food"></div>
+          <div class="emoji-category" id="activities"></div>
+          <div class="emoji-category" id="travel"></div>
+          <div class="emoji-category" id="objects"></div>
+          <div class="emoji-category" id="symbols"></div>
+        </div>
+      </div>
+      <div class="input-wrapper">
+        <button class="image-btn" id="imageBtn" onclick="triggerImageUpload()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </button>
+        <button class="emoji-btn" onclick="toggleEmoji()">😀</button>
+        <input type="text" class="input-field" id="msgInput" placeholder="Γράψε ένα μήνυμα...">
+        <button class="send-btn" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+        <button class="sound-btn" id="soundBtn" onclick="toggleSound()" title="Ένταση Ήχου">🔊</button>
+        <button class="radio-btn" id="radioBtn" onclick="togglePlayer()" title="Ραδιόφωνο">📻</button>
+        <button class="banned-btn" id="bannedBtn" onclick="toggleBannedPanel()" title="Λίστα Banned Χρηστών">⛔</button>
+        <button class="bg-btn" onclick="toggleBgControls()">🎨</button>
+        <button class="clear-btn" id="clearBtn" onclick="showClearConfirmation()" title="Διαγραφή όλων των μηνυμάτων (μόνο Admin)">🗑️</button>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h3 style="font-weight: 700; font-size: 1.35em; background: linear-gradient(90deg, #66ffc2, #ff66ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">👥 Χρήστες Online</h3>
+      <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
+    </div>
+    <div class="user-count" style="padding: 0 20px 10px 20px;"><span id="userNum">0</span> άτομα</div>
+    <div class="user-list" id="userList"></div>
+    <div class="actions-area">
+      <button class="admin-btn" id="adminClearBtn" onclick="adminClearAll()">⚠️ Καθαρισμός</button>
+      <button class="logout-btn" onclick="logoutChat()">Αποσύνδεση</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+<input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/gif" style="display:none" onchange="handleImageUpload(event)">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
