@@ -74,7 +74,7 @@
       <button class="player-close-btn" onclick="closePlayer()">🔽 Κλείσιμο παραθύρου</button>
     </div>
   </div>
-  <iframe id="playerIframe" src="" frameborder="0" allowtransparency="true" style="background: transparent;"></iframe>
+  <iframe id="playerIframe" src="" frameborder="0" allowtransparency="true" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" style="background: transparent;"></iframe>
 </div>
 
 <div class="login" id="loginDiv">
@@ -95,12 +95,10 @@
       <button class="exit-private-btn" onclick="closePrivateChat()">← Έξοδος</button>
     </div>
     
-    <!-- ΔΙΟΡΘΩΜΕΝΟ HEADER με τον τίτλο τραγουδιού στη μέση -->
     <div class="header" id="mainHeader">
       <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()">☰</button>
       <h2>💬 Radio Synnefa Chat Live</h2>
       
-      <!-- ΝΕΟ: Τίτλος τραγουδιού στη ΜΕΣΗ του header -->
       <div class="radio-now-playing-bar" id="radioNowPlayingBar">
         <span class="radio-icon"></span>
         <span id="radioNowPlayingText" class="radio-text">Αναμονή για εκπομπή...</span>
@@ -147,7 +145,6 @@
         </div>
       </div>
      <div class="input-wrapper">
-        <!-- ΜΕΤΑΦΕΡΘΗΚΕ ΠΡΩΤΟ: Κουμπί Μικροφώνου & Χρονομετρητής -->
         <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Ηχογράφηση">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -161,7 +158,6 @@
           <span id="recTimeText">0:00</span>
         </div>
         
-        <!-- Κουμπί για Φωτογραφίες -->
         <button class="image-btn" id="imageBtn" onclick="triggerImageUpload()">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
@@ -169,10 +165,8 @@
           </svg>
         </button>
         
-        <!-- Κουμπί για Emojis -->
         <button class="emoji-btn" onclick="toggleEmoji()">😀</button>
 
-        <!-- Το πλαίσιο κειμένου -->
         <input type="text" class="input-field" id="msgInput" placeholder="Γράψε ένα μήνυμα...">
         <button class="send-btn" onclick="sendMsg()">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -203,7 +197,6 @@
 <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
 <input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/gif" style="display:none" onchange="handleImageUpload(event)">
 
-<!-- ΝΕΟ: Popup Προεπισκόπησης Ηχογράφησης -->
 <div class="audio-preview-overlay" id="audioPreviewOverlay">
   <div class="audio-preview-popup">
     <h3>🎙️ Προεπισκόπηση Ηχογράφησης</h3>
@@ -214,7 +207,6 @@
     </div>
   </div>
 </div>
-<!-- ΤΕΛΟΣ ΝΕΟΥ -->
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
