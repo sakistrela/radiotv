@@ -146,16 +146,8 @@
           <div class="emoji-category" id="symbols"></div>
         </div>
       </div>
-      <div class="input-wrapper">
-        <button class="image-btn" id="imageBtn" onclick="triggerImageUpload()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-            <circle cx="12" cy="13" r="4"></circle>
-          </svg>
-        </button>
-        <button class="emoji-btn" onclick="toggleEmoji()">😀</button>
-        
-        <!-- ΝΕΟ: Κουμπί Μικροφώνου & Χρονομετρητής -->
+     <div class="input-wrapper">
+        <!-- ΜΕΤΑΦΕΡΘΗΚΕ ΠΡΩΤΟ: Κουμπί Μικροφώνου & Χρονομετρητής -->
         <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Ηχογράφηση">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -168,8 +160,19 @@
           <span class="rec-dot"></span>
           <span id="recTimeText">0:00</span>
         </div>
-        <!-- ΤΕΛΟΣ ΝΕΟΥ -->
+        
+        <!-- Κουμπί για Φωτογραφίες -->
+        <button class="image-btn" id="imageBtn" onclick="triggerImageUpload()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </button>
+        
+        <!-- Κουμπί για Emojis -->
+        <button class="emoji-btn" onclick="toggleEmoji()">😀</button>
 
+        <!-- Το πλαίσιο κειμένου -->
         <input type="text" class="input-field" id="msgInput" placeholder="Γράψε ένα μήνυμα...">
         <button class="send-btn" onclick="sendMsg()">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
