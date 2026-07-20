@@ -555,7 +555,7 @@ async function adminClearAll() {
 }
 
 async function logoutChat() { 
-  if (!confirm("⚠️ Προσοχή: Αν αποσυνδεθείτε, χάνετε τη δέσμευση του ονόματός σας. Αν κάποιος άλλος το πάρει, δεν θα μπορείτε να εισέλθετε ξανά με αυτό το όνομα. Επιβεβαιώνετε;")) return; 
+  if (!confirm("⚠️ Προσοχή! Σημαντική Προειδοποίηση: Αν αποσυνδεθείτε, το όνομά σας αποδεσμεύεται. Αν το προλάβει και το κατοχυρώσει άλλος χρήστης, θα χάσετε μόνιμα το όνομα και τη φωτογραφία σας και θα πρέπει να κάνετε νέα εγγραφή από την αρχή. Θέλετε σίγουρα να αποσυνδεθείτε;")) return; 
   document.getElementById('playerIframe').src = ''; document.getElementById('playerPanel').classList.remove('show'); isPlayerOpen = false; closeTvLiveWindow();
   try { 
     await db.ref('active_sessions/' + currentUser).remove(); await db.ref('users/' + currentUser).remove();
