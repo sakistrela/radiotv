@@ -294,7 +294,6 @@ async function loadPrivateMessages(otherUser) {
   });
 }
 
-// ΔΙΟΡΘΩΜΕΝΗ: Προσθήκη preload="none" και requestAnimationFrame για ομαλό scroll
 function addMessageToUI(msg, isPrivate) {
   var container = document.getElementById('msgContainer');
   if (msg._id) { var existingMsg = container.querySelector(`.msg[data-msg-id="${msg._id}"]`); if (existingMsg) return; }
@@ -475,21 +474,99 @@ function setupPresenceInitial() {
   }); 
 }
 
+// ======================================================================
+// ΔΙΟΡΘΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ: Καθαρίζει ΟΛΑ τα παλιά δεδομένα πριν την εγγραφή
+// ======================================================================
 async function registerUser() {
-  var username = document.getElementById('userIn').value.trim(); var password = document.getElementById('passIn').value.trim();
-  var err = document.getElementById('err'); err.style.display = 'none';
-  if (!username || !password) { err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; err.style.display = 'block'; return; }
-  if (username.includes(":")) { err.textContent = '⚠️ Το όνομα δεν μπορεί να περιέχει ":"'; err.style.display = 'block'; return; }
-  if (password.length < 3) { err.textContent = '⚠️ Ο κωδικός πρέπει να είναι τουλάχιστον 3 χαρακτήρες!'; err.style.display = 'block'; return; }
+  var username = document.getElementById('userIn').value.trim(); 
+  var password = document.getElementById('passIn').value.trim();
+  var err = document.getElementById('err'); 
+  err.style.display = 'none';
+  
+  if (!username || !password) { 
+    err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; 
+    err.style.display = 'block'; 
+    return; 
+  }
+  if (username.includes(":")) { 
+    err.textContent = '⚠️ Το όνομα δεν μπορεί να περιέχει ":"'; 
+    err.style.display = 'block'; 
+    return; 
+  }
+  if (password.length < 3) { 
+    err.textContent = '⚠️ Ο κωδικός πρέπει να είναι τουλάχιστον 3 χαρακτήρες!'; 
+    err.style.display = 'block'; 
+    return; 
+  }
+  
   var isBanned = await checkIfBanned(username);
-  if (isBanned) { err.textContent = '🚫 Αυτό το όνομα είναι banned!'; err.style.display = 'block'; return; }
-  var existingSnap = await db.ref('registered_users/' + username.toLowerCase()).once('value');
-  if (existingSnap.exists()) { err.textContent = '❌ Αυτό το όνομα είναι ήδη κατοχυρωμένο!'; err.style.display = 'block'; return; }
+  if (isBanned) { 
+    err.textContent = '🚫 Αυτό το όνομα είναι banned!'; 
+    err.style.display = 'block'; 
+    return; 
+  }
+  
+  var lowerUsername = username.toLowerCase();
+  var existingSnap = await db.ref('registered_users/' + lowerUsername).once('value');
+  
+  if (existingSnap.exists()) { 
+    err.textContent = '❌ Αυτό το όνομα είναι ήδη κατοχυρωμένο!'; 
+    err.style.display = 'block'; 
+    return; 
+  }
+
+  // --- ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Καθαρισμός ορφανών δεδομένων πριν τη δημιουργία ---
   try {
-    await db.ref('registered_users/' + username.toLowerCase()).set({ username: username, password: password, avatar: null, created_at: Date.now() });
-    localStorage.setItem('chat_username', username); localStorage.setItem('chat_password', password);
+    var updates = {};
+
+    // 1. Διαγραφή τυχόν παλιών δημόσιων μηνυμάτων αυτού του ονόματος
+    var messagesSnap = await db.ref('messages').once('value');
+    if (messagesSnap.exists()) {
+      messagesSnap.forEach(child => {
+        var msg = child.val();
+        if (msg.user && msg.user.toLowerCase() === lowerUsername) {
+          updates['messages/' + child.key] = null;
+        }
+      });
+    }
+
+    // 2. Διαγραφή τυχόν παλιών ιδιωτικών συνομιλιών που περιέχουν αυτό το όνομα
+    var privSnap = await db.ref('private_messages').once('value');
+    if (privSnap.exists()) {
+      privSnap.forEach(child => {
+        if (child.key.includes(lowerUsername)) {
+          updates['private_messages/' + child.key] = null;
+        }
+      });
+    }
+
+    // 3. Καθαρισμός τυχόν υπολειπόμενων δεδομένων χρήστη (avatar, sessions)
+    updates['users/' + username] = null;
+    updates['active_sessions/' + username] = null;
+
+    // Εκτέλεση των διαγραφών στη βάση
+    if (Object.keys(updates).length > 0) {
+      await db.ref().update(updates);
+    }
+  } catch (cleanupErr) {
+    console.error("Σφάλμα καθαρισμού παλιών δεδομένων:", cleanupErr);
+  }
+  // ------------------------------------------------------------------------
+
+  try {
+    await db.ref('registered_users/' + lowerUsername).set({ 
+      username: username, 
+      password: password, 
+      avatar: null, 
+      created_at: Date.now() 
+    });
+    localStorage.setItem('chat_username', username); 
+    localStorage.setItem('chat_password', password);
     await enterChat(username);
-  } catch(e) { err.textContent = 'Σφάλμα: ' + e.message; err.style.display = 'block'; }
+  } catch(e) { 
+    err.textContent = 'Σφάλμα: ' + e.message; 
+    err.style.display = 'block'; 
+  }
 }
 
 async function goChat(isAutoLogin = false) { 
@@ -630,7 +707,6 @@ async function startRecording() {
   }
 }
 
-// ΔΙΟΡΘΩΜΕΝΗ: Πλήρης απελευθέρωση μικροφώνου για να μην ανταγωνίζεται το ραδιόφωνο
 function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
