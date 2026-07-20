@@ -80,9 +80,15 @@
 <div class="login" id="loginDiv">
   <div class="login-box">
     <h1>💬 RadioChat Live</h1>
-    <input type="text" id="userIn" placeholder="Όνομα χρήστη" autocomplete="off">
-<input type="password" id="passIn" placeholder="Κωδικός" autocomplete="new-password">
-    <button onclick="goChat(false)">Είσοδος</button>
+    
+    <!-- Προσθήκη φόρμας για σωστή αναγνώριση από τον browser -->
+    <form onsubmit="event.preventDefault(); goChat(false);">
+      <!-- Τα ονόματα 'fake_user' και 'fake_pass' εμποδίζουν τον Chrome να ενεργοποιήσει τον έλεγχο αποθηκευμένων κωδικών -->
+      <input type="text" id="userIn" placeholder="Όνομα χρήστη" autocomplete="off" name="fake_user">
+      <input type="password" id="passIn" placeholder="Κωδικός" autocomplete="new-password" name="fake_pass">
+      <button type="submit">Είσοδος</button>
+    </form>
+    
     <button class="register-btn" onclick="registerUser()">Εγγραφή Νέου Λογαριασμού</button>
     <div class="error" id="err"></div>
   </div>
