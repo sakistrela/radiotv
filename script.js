@@ -596,9 +596,24 @@ async function enterChat(username, uid) {
     isAdmin = false; document.getElementById('clearBtn').classList.remove('show'); document.getElementById('bannedBtn').classList.remove('show');
   } 
   
+  // Φόρτωση avatar από τη βάση δεδομένων (registered_users)
+  var regSnap = await db.ref('registered_users/' + currentUid).once('value');
+  var regData = regSnap.val();
+  var avatarUrl = null;
+  
+  if (regData && regData.avatar) {
+    avatarUrl = regData.avatar;
+    userAvatars[currentUid] = avatarUrl;
+    localStorage.setItem('user_avatar_' + currentUid, avatarUrl);
+  } else {
+    avatarUrl = localStorage.getItem('user_avatar_' + currentUid);
+    if (avatarUrl) {
+      userAvatars[currentUid] = avatarUrl;
+    }
+  }
+  
   var trackData = { uid: currentUid, username: currentUser }; 
-  var localAvatar = userAvatars[currentUid] || localStorage.getItem('user_avatar_' + currentUid);
-  if (localAvatar) { trackData.avatar = localAvatar; } 
+  if (avatarUrl) { trackData.avatar = avatarUrl; } 
   
   await db.ref('users/' + currentUid).set(trackData);
   db.ref('users/' + currentUid).onDisconnect().remove();
