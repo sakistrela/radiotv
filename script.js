@@ -474,9 +474,9 @@ function setupPresenceInitial() {
   }); 
 }
 
-// ======================================================================
-// ΔΙΟΡΘΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ: Καθαρίζει ΟΛΑ τα παλιά δεδομένα πριν την εγγραφή
-// ======================================================================
+// =========================================================================
+// ΟΡΙΣΤΙΚΗ ΔΙΟΡΘΩΣΗ: Πυρηνικός καθαρισμός κατά την εγγραφή νέου λογαριασμού
+// =========================================================================
 async function registerUser() {
   var username = document.getElementById('userIn').value.trim(); 
   var password = document.getElementById('passIn').value.trim();
@@ -507,19 +507,12 @@ async function registerUser() {
   }
   
   var lowerUsername = username.toLowerCase();
-  var existingSnap = await db.ref('registered_users/' + lowerUsername).once('value');
-  
-  if (existingSnap.exists()) { 
-    err.textContent = '❌ Αυτό το όνομα είναι ήδη κατοχυρωμένο!'; 
-    err.style.display = 'block'; 
-    return; 
-  }
 
-  // --- ΚΡΙΣΙΜΗ ΔΙΟΡΘΩΣΗ: Καθαρισμός ορφανών δεδομένων πριν τη δημιουργία ---
+  // 1. ΠΥΡΗΝΙΚΟΣ ΚΑΘΑΡΙΣΜΟΣ: Σβήνουμε ΟΛΑ τα παλιά δεδομένα αυτού του ονόματος
   try {
     var updates = {};
-
-    // 1. Διαγραφή τυχόν παλιών δημόσιων μηνυμάτων αυτού του ονόματος
+    
+    // Σβήσιμο δημόσιων μηνυμάτων
     var messagesSnap = await db.ref('messages').once('value');
     if (messagesSnap.exists()) {
       messagesSnap.forEach(child => {
@@ -530,7 +523,7 @@ async function registerUser() {
       });
     }
 
-    // 2. Διαγραφή τυχόν παλιών ιδιωτικών συνομιλιών που περιέχουν αυτό το όνομα
+    // Σβήσιμο ιδιωτικών μηνυμάτων
     var privSnap = await db.ref('private_messages').once('value');
     if (privSnap.exists()) {
       privSnap.forEach(child => {
@@ -540,19 +533,27 @@ async function registerUser() {
       });
     }
 
-    // 3. Καθαρισμός τυχόν υπολειπόμενων δεδομένων χρήστη (avatar, sessions)
+    // Σβήσιμο υπολοίπων δεδομένων χρήστη
+    updates['registered_users/' + lowerUsername] = null;
     updates['users/' + username] = null;
     updates['active_sessions/' + username] = null;
+    updates['banned_users/' + lowerUsername] = null;
 
-    // Εκτέλεση των διαγραφών στη βάση
     if (Object.keys(updates).length > 0) {
       await db.ref().update(updates);
     }
-  } catch (cleanupErr) {
-    console.error("Σφάλμα καθαρισμού παλιών δεδομένων:", cleanupErr);
+    
+    // Καθαρισμός τοπικής μνήμης browser (Local Storage & Memory)
+    localStorage.removeItem('user_avatar_' + lowerUsername);
+    if (typeof userAvatars !== 'undefined') {
+      delete userAvatars[lowerUsername];
+    }
+    
+  } catch (e) {
+    console.error("Σφάλμα καθαρισμού παλιών δεδομένων:", e);
   }
-  // ------------------------------------------------------------------------
 
+  // 2. Δημιουργία νέου, πεντακάθαρου λογαριασμού
   try {
     await db.ref('registered_users/' + lowerUsername).set({ 
       username: username, 
@@ -562,7 +563,11 @@ async function registerUser() {
     });
     localStorage.setItem('chat_username', username); 
     localStorage.setItem('chat_password', password);
-    await enterChat(username);
+    
+    // 3. ΑΝΑΓΚΑΣΤΙΚΗ ΑΝΑΝΕΩΣΗ ΣΕΛΙΔΑΣ για να διωχθούν όλα τα cached δεδομένα
+    alert('✅ Ο λογαριασμός δημιουργήθηκε και καθαρίστηκαν όλα τα παλιά δεδομένα. Η σελίδα θα ανανεωθεί για καθαρή εκκίνηση.');
+    window.location.reload();
+    
   } catch(e) { 
     err.textContent = 'Σφάλμα: ' + e.message; 
     err.style.display = 'block'; 
