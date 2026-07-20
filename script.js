@@ -12,11 +12,13 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 var currentUser = '';
+var currentUid = '';
 var currentSessionId = '';
-var onlineUsers = {};
+var onlineUsers = {}; // uid -> {username, avatar}
 var userAvatars = {};
 var isAdmin = false;
-var currentPrivateChat = null;
+var currentPrivateChat = null; // Αποθηκεύει το UID του άλλου χρήστη
+var currentPrivateChatName = null; // Αποθηκεύει το όνομα για εμφάνιση
 var pendingPrivateNotif = null;
 var bannedUsersList = [];
 var pendingBanUsername = null;
@@ -87,8 +89,8 @@ document.addEventListener('touchend', function() { if (tvDragState.isDragging) {
 
 function ensureAdminOnline() {
   if (currentUser && isAdmin) {
-    var avatarData = userAvatars[currentUser.toLowerCase()] || localStorage.getItem('user_avatar_' + currentUser.toLowerCase()) || null;
-    db.ref('users/' + currentUser).set({ username: currentUser, avatar: avatarData });
+    var avatarData = userAvatars[currentUid] || localStorage.getItem('user_avatar_' + currentUid) || null;
+    db.ref('users/' + currentUid).update({ avatar: avatarData });
   }
 }
 
@@ -111,7 +113,7 @@ function closeSidebar() { document.getElementById('sidebar').classList.remove('o
 
 var notificationSound = new Audio('https://cdn.pixabay.com/audio/2024/02/08/audio_b7f03fb030.mp3');
 var soundVolume = 1.0;
-var soundStates = [{ volume: 1.0, icon: '🔊' }, { volume: 0.3, icon: '🔉' }, { volume: 0, icon: '🔇' }];
+var soundStates = [{ volume: 1.0, icon: '' }, { volume: 0.3, icon: '🔉' }, { volume: 0, icon: '🔇' }];
 var currentSoundState = 0;
 
 function loadSoundSettings() { 
@@ -126,13 +128,13 @@ function toggleSound() {
 function playNotificationSound() { if (soundVolume > 0) { notificationSound.currentTime = 0; notificationSound.play().catch(e => {}); } }
 
 var emojiCategories = {
-  smileys: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🥳','😏','😒','😞','😔','😟','😕','🙁','😖','😫','😩','🥺','😭','😤','😠','😡','🤬','😳','🥶','😨','😰','😥','😓','🤗','🤔','🤫','😶','😐','😑','😬','🙄','😯','😧','😮','😲','😴','🤤','😵','🤐','🥴','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','💩','💀','☠️','👽','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊'],
-  animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🐣','🦆','🦅','🦉','🦇','🐺','🦄','🐝','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿️','🦔','🐾','🐉','🐲'],
-  food: ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕','🫒','🧄','🧅','🥔','🍠','🥐','🥖','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🌭','🍔','🍟','🍕','🫓','🥙','🌮','🌯','🫔','🥗','🥘','🫕','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍘','🍥','🥠','🥮','🍢','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🫗','🍼','🫖','☕','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊','🥄','🍴','🍽️','🥣','🥡','🥢','🧂'],
-  activities: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🤹','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🪘','🎷','🎺','🪗','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮','🎰','🧩'],
-  travel: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍️','🛵','🚲','🛴','🛺','🚨','🚔','🚍','🚖','🚘','🚡','🚠','🚟','🚃','🚋','🚞','🚝','🚄','🚅','🚈','🚇','🚆','🚉','✈️','🛫','🛬','🛩️','💺','🛰️','🚀','🛸','🚁','🛶','⛵','🚤','🛥️','🛳️','⛴️','🚢','⚓','🪝','⛽','🚧','🚦','🚥','🗺️','🗿','🗽','🗼','🏰','🏯','🏟️','🎡','🎢','🎠','⛲','⛱️','🏖️','🏝️','🏜️','🌋','⛰️','🏔️','🗻','🏕️','⛺','🛖','🏠','🏡','🏘️','🏚️','🏗️','🏭','🏢','🏬','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏩','💒','🏛️','⛪','🕌','🕍','🛕','🕋','⛩️','🛤️','🛣️','🗾','🎑','🏞️','🌅','🌄','🌠','🎇','🎆','🌇','🌆','🏙️','🌃','🌌','🌉','🌁'],
-  objects: ['⌚','📱','📲','💻','⌨️','🖥️','🖨️','🖱️','🖲️','🕹️','🗜️','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🎙️','🎚️','🎛️','🧭','⏱️','⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🔌','💡','🔦','🕯️','🪔','🧯','🛢️','💸','💵','💴','💶','💷','🪙','💰','💳','💎','⚖️','🪜','🧰','🪛','🔧','🔨','⚒️','🛠️','⛏️','🪚','🔩','⚙️','🪤','🧱','⛓️','🧲','🔫','💣','🧨','🪓','🔪','🗡️','⚔️','🛡️','🚬','⚰️','🪦','⚱️','🏺','🔮','📿','🧿','💈','⚗️','🔭','🔬','🕳️','🩹','🩺','💊','💉','🩸','🧬','🦠','🧫','🧪','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🪄','🪅','🎊','🎉','🎎','🏮','🎐','🧧','✉️','📩','📨','📧','💌','📥','📤','📦','🏷️','🪧','📪','📫','📬','📭','📮','📯','📜','📃','📄','📑','🧾','📊','📈','📉','🗒️','🗓️','📆','📅','🗑️','📇','🗃️','🗳️','🗄️','📋','📁','📂','🗂️','🗞️','📰','📓','📔','📒','📕','📗','📘','📙','📚','📖','🔖','🧷','🔗','📎','🖇️','📐','📏','🧮','📌','📍','✂️','🖊️','🖋️','✒️','🖌️','🖍️','📝','✏️','🔍','🔎','🔏','🔐','🔒','🔓'],
-  symbols: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🛗','🈳','🈂️','🛂','🛃','🛄','🛅','🚹','🚺','🚼','⚧️','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🆖','🆗','🆙','🆒','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔢','#️⃣','*️⃣','⏏️','▶️','⏸️','⏯️','⏹️','⏺️','⏭️','⏮️','⏩','⏪','⏫','⏬','◀️','🔼','🔽','➡️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↪️','↩️','⤴️','⤵️','🔀','🔁','🔂','🔄','🔃','🎵','🎶','➕','➖','➗','✖️','♾️','💲','💱','™️','©️','®️','👁️‍🗨️','🔚','🔙','🔛','🔝','🔜','〰️','➰','➿','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📣','📢','👁️‍🗨️','💬','💭','🗯️','♠️','♣️','♥️','♦️','🃏','🎴','🀄','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛']
+  smileys: ['😀','','😄','😁','😆','','😂','🤣','😊','','🙂','🙃','😉','😌','😍','🥰','😘','','😙','😚','😋','','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🥳','','😒','😞','😔','','😕','🙁','😖','😫','😩','🥺','😭','😤','😠','😡','','😳','🥶','😨','😰','😥','😓','🤗','🤔','🤫','😶','😐','😑','😬','🙄','😯','😧','😮','😲','😴','🤤','😵','','🥴','🤮','','😷','🤒','','🤑','🤠','😈','👿','💩','💀','️','👽','🤖','','😸','😹','😻','','😽','🙀','😿','😾','🙈','🙉',''],
+  animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🐣','🦆','🦅','🦉','🦇','🐺','🦄','🐝','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','','🦨','🦡','','🦥','🐁','','🐿️','🦔','🐾','🐉','🐲'],
+  food: ['🍏','','🍐','🍊','','🍌','🍉','','🍓','🫐','','🍒','🍑','','🍍','🥥','','🍅','🍆','','🥦','🥬','','🌶️','🫑','','🥕','🫒','','🧅','🥔','','🥐','🥖','','🥖','🥨','','🥚','🍳','','🥞','🧇','','🌭','🍔','','🍕','🫓','','🌮','🌯','','🥗','🥘','','🥫','🍝','','🍲','🍛','','🍱','🥟','','🍤','🍙','','🍥','🥠','','🍢','🍡','','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🫗','🍼','🫖','☕','','🧃','🥤','','🍶','🍺','','🥂','🍷','','🍸','🍹','','🍾','🧊','','🍴','🍽️','🥣','🥡','🥢','🧂'],
+  activities: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','️','🏂','🪂','️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','','🏄','🏊','','🚣','🧗','','🚴','🏆','','🥈','🥉','','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🤹','','🩰','🎨','','🎤','🎧','','🎹','🥁','','🎷','🎺','','🎸','🪕','','🎲','♟️','','🎳','🎮','','🧩'],
+  travel: ['','🚕','🚙','','🚎','🏎️','','🚑','🚒','','🛻','🚚','','🚜','🏍️','','🚲','🛴','','🚨','🚔','','🚖','🚘','','🚠','🚟','','🚋','🚞','','🚄','🚅','','🚇','🚆','','✈️','🛫','','🛩️','💺','️','🚀','🛸','','🛶','⛵','','🛥️','🛳️','⛴️','🚢','','🪝','⛽','','🚦','🚥','️','🗿','🗽','','🏰','🏯','️','🎡','🎢','','⛲','⛱️','🏖️','🏝️','️','🌋','⛰️','️','🗻','🏕️','⛺','🛖','🏠','🏡','🏘️','️','🏗️','🏭','🏢','🏬','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏩','💒','🏛️','⛪','🕌','🕍','','🕋','⛩️','🛤️','🛣️','','🎑','🏞️','🌅','🌄','🌠','🎇','🎆','🌇','🌆','🏙️','🌃','🌌','🌉','🌁'],
+  objects: ['⌚','','📲','💻','⌨️','🖥️','🖨️','️','🖲️','🕹️','🗜️','💽','💾','💿','📀','','📷','📸','','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🎙️','️','🎛️','🧭','⏱️','⏲️','','🕰️','⌛','⏳','📡','🔋','🔌','💡','🔦','️','🪔','🧯','🛢️','💸','💵','','💶','💷','🪙','💰','💳','💎','⚖️','🪜','🧰','','🔧','🔨','️','🛠️','⛏️','🪚','🔩','⚙️','🪤','🧱','️','🧲','🔫','','🧨','🪓','','🗡️','⚔️','🛡️','🚬','⚰️','🪦','⚱️','','🔮','📿','','💈','⚗️','','🔬','🕳️','🩹','🩺','💊','','🩸','🧬','','🧫','🧪','️','🧹','🪠','','🧻','🚽','','🚿','🛁','','🧼','🪥','','🧽','🪣','','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','','🧸','🪆','️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🪄','🪅','🎊','🎉','🎎','🏮','🎐','🧧','✉️','📩','📨','📧','💌','📥','📤','','🏷️','🪧','📪','📫','📬','📭','📮','📯','📜','📃','📄','📑','🧾','📊','📈','📉','🗒️','🗓️','📆','','🗑️','📇','️','🗳️','🗄️','📋','📁','','🗂️','🗞️','📰','📓','📔','📒','📕','📗','','📙','📚','','🔖','🧷','','📎','🖇️','','📏','🧮','','📍','✂️','️','🖋️','✒️','🖌️','🖍️','','✏️','🔍','','🔏','🔐','','🔓'],
+  symbols: ['❤️','🧡','💛','💚','💙','💜','🖤','','🤎','💔','❣️','💕','💞','💓','','💖','💘','💝','','☮️','✝️','☪️','🕉️','☸️','️','🔯','🕎','️','☦️','🛐','','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','','🈹','🈲','️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','','🚯','🚳','','🔞','📵','','❗','❕','❓','❔','‼️','⁉️','','🔆','〽️','️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','','🅿️','🛗','🈳','🈂️','','🛃','🛄','🛅','🚹','🚺','🚼','⚧️','🚻','','🎦','📶','','🔣','ℹ️','','🔡','🔠','','🆗','🆙','','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','','🔢','#️⃣','*️⃣','⏏️','▶️','⏸️','⏯️','️','⏺️','⏭️','⏮️','⏩','','⏫','⏬','️','🔼','🔽','️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↪️','↩️','⤴️','⤵️','🔀','🔁','🔂','🔄','🔃','🎵','','➕','➖','➗','✖️','♾️','💲','💱','™️','©️','®️','👁️‍🗨️','','🔙','🔛','','🔜','〰️','','➿','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','','📢','👁️‍🗨️','💬','💭','️','♠️','♣️','♥️','♦️','🃏','','🀄','🕐','','🕒','🕓','','🕕','🕖','','🕘','🕙','','🕛']
 };
 
 Object.keys(emojiCategories).forEach(category => { 
@@ -191,7 +193,7 @@ async function confirmBan() {
   var username = pendingBanUsername; pendingBanUsername = null; 
   try { 
     db.ref('banned_users/' + username.toLowerCase()).set({ banned_by: currentUser, ban_type: 'username', banned_at: Date.now() }); 
-    db.ref('active_sessions/' + username).remove(); alert('🚫 Banned!'); loadBannedUsers(); ensureAdminOnline();
+    alert('🚫 Banned!'); loadBannedUsers(); ensureAdminOnline();
   } catch(e) { alert('Σφάλμα: ' + e.message); } 
 }
 function cancelBan() { pendingBanUsername = null; document.getElementById('banTypeOverlay').classList.remove('show'); }
@@ -222,8 +224,8 @@ function handleBannedWhileOnline() {
   document.getElementById('banNotifOverlay').classList.add('show'); 
   setTimeout(async () => { 
     try { 
-      db.ref('users/' + currentUser).remove(); localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password');
-      currentUser = ''; isAdmin = false; document.getElementById('chatApp').style.display = 'none'; 
+      db.ref('users/' + currentUid).remove(); localStorage.removeItem('chat_uid'); localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password');
+      currentUser = ''; currentUid = ''; isAdmin = false; document.getElementById('chatApp').style.display = 'none'; 
       document.getElementById('banNotifOverlay').classList.remove('show'); document.getElementById('loginDiv').style.display = 'flex'; 
     } catch(e) {} 
   }, 3000); 
@@ -244,10 +246,10 @@ async function handleAvatarUpload(event) {
   if (userAvatarEl) { userAvatarEl.classList.add('loading'); userAvatarEl.innerHTML = '<div class="avatar-spinner"></div>'; }
   try {
     var uploadResult = await uploadToImgur(file);
-    userAvatars[currentUser.toLowerCase()] = uploadResult.link;
-    localStorage.setItem('user_avatar_' + currentUser.toLowerCase(), uploadResult.link);
-    db.ref('registered_users/' + currentUser.toLowerCase() + '/avatar').set(uploadResult.link);
-    db.ref('users/' + currentUser).update({ avatar: uploadResult.link });
+    userAvatars[currentUid] = uploadResult.link;
+    localStorage.setItem('user_avatar_' + currentUid, uploadResult.link);
+    db.ref('registered_users/' + currentUid + '/avatar').set(uploadResult.link);
+    db.ref('users/' + currentUid).update({ avatar: uploadResult.link });
     updateUserList(); alert('✅ Η φωτογραφία σου ενημερώθηκε!');
   } catch(err) { 
     alert('Σφάλμα: ' + err.message); if (userAvatarEl) { userAvatarEl.classList.remove('loading'); userAvatarEl.innerHTML = originalAvatarHTML; } 
@@ -268,11 +270,10 @@ function linkify(text) {
     return '<a href="' + fullUrl + '" target="_blank" style="color: #60a5fa; text-decoration: underline; word-break: break-all;">' + url + '</a>'; 
   }); 
 }
-function getAvatarHtml(username) { 
-  var lower = username.toLowerCase(); var initial = username.charAt(0).toUpperCase(); 
-  var avatarUrl = userAvatars[lower] || localStorage.getItem('user_avatar_' + lower); 
+function getAvatarHtml(username, uid) { 
+  var avatarUrl = userAvatars[uid] || localStorage.getItem('user_avatar_' + uid); 
   if (avatarUrl) { return `<div class="msg-avatar"><img src="${avatarUrl}" alt="${escapeHtml(username)}"></div>`; } 
-  return `<div class="msg-avatar">${initial}</div>`; 
+  return `<div class="msg-avatar">${username.charAt(0).toUpperCase()}</div>`; 
 }
 
 async function loadMessages() { 
@@ -282,36 +283,36 @@ async function loadMessages() {
     setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
   });
 }
-async function loadPrivateMessages(otherUser) { 
+async function loadPrivateMessages(otherUid, otherName) { 
   var container = document.getElementById('msgContainer'); container.innerHTML = ''; 
-  var chatId = [currentUser.toLowerCase(), otherUser.toLowerCase()].sort().join('_');
+  var chatId = [currentUid, otherUid].sort().join('_');
   db.ref('private_messages/' + chatId).limitToLast(200).once('value', (snap) => {
     snap.forEach(child => { var msg = child.val(); msg._id = child.key; addMessageToUI(msg, true); });
     container.scrollTop = container.scrollHeight;
-    db.ref('private_messages/' + chatId).orderByChild('receiver').equalTo(currentUser).once('value', (snap) => { 
+    db.ref('private_messages/' + chatId).orderByChild('receiverUid').equalTo(currentUid).once('value', (snap) => { 
       snap.forEach(child => { if (!child.val().is_read) { child.ref.update({ is_read: true }); } }); 
     });
   });
 }
 
-// ΔΙΟΡΘΩΜΕΝΗ: Προσθήκη preload="none" και requestAnimationFrame για ομαλό scroll
 function addMessageToUI(msg, isPrivate) {
   var container = document.getElementById('msgContainer');
   if (msg._id) { var existingMsg = container.querySelector(`.msg[data-msg-id="${msg._id}"]`); if (existingMsg) return; }
   var div = document.createElement('div');
-  var senderName = msg.user || msg.sender || "Άγνωστος";
+  var senderName = msg.userName || msg.senderName || msg.user || msg.sender || "Άγνωστος";
+  var senderUid = msg.userId || msg.senderUid || "unknown";
   var text = msg.text || msg.message || "";
   var img = msg.image || msg.image_data || null;
   var msgId = msg._id;
   var deletehash = msg.imageDeletehash || null;
-  var isOwn = senderName.toLowerCase() === currentUser.toLowerCase();
+  var isOwn = (senderUid === currentUid);
   div.className = 'msg' + (isOwn ? ' own' : '') + (isPrivate ? ' private' : '');
   if (msgId) { div.setAttribute('data-msg-id', msgId); }
-  var avatarHtml = getAvatarHtml(senderName);
+  var avatarHtml = getAvatarHtml(senderName, senderUid);
   var time = new Date(msg.timestamp || Date.now()).toLocaleTimeString('el', { hour: '2-digit', minute: '2-digit' });
   var deleteButtonHtml = '';
   if (img && isAdmin && deletehash && msgId) {
-    var firebasePath = isPrivate ? 'private_messages/' + [msg.sender.toLowerCase(), msg.receiver.toLowerCase()].sort().join('_') + '/' + msgId : 'messages/' + msgId;
+    var firebasePath = isPrivate ? 'private_messages/' + [msg.senderUid, msg.receiverUid].sort().join('_') + '/' + msgId : 'messages/' + msgId;
     var safePath = firebasePath.replace(/'/g, "\\'");
     var safeDeletehash = deletehash.replace(/'/g, "\\'");
     deleteButtonHtml = `<button class="delete-image-btn" onclick="deleteImage('${safePath}', '${safeDeletehash}', this)">🗑️ Διαγραφή από παντού</button>`;
@@ -347,10 +348,16 @@ async function sendMsg() {
   var input = document.getElementById('msgInput'); var text = input.value.trim(); if (!text) return; 
   try { 
     if (currentPrivateChat) { 
-      var chatId = [currentUser.toLowerCase(), currentPrivateChat.toLowerCase()].sort().join('_'); 
-      db.ref('private_messages/' + chatId).push({ sender: currentUser, receiver: currentPrivateChat, message: text, timestamp: Date.now() }); 
+      var chatId = [currentUid, currentPrivateChat].sort().join('_'); 
+      db.ref('private_messages/' + chatId).push({ 
+        senderUid: currentUid, senderName: currentUser, 
+        receiverUid: currentPrivateChat, receiverName: currentPrivateChatName, 
+        message: text, timestamp: Date.now() 
+      }); 
     } else { 
-      db.ref('messages').push({ user: currentUser, text: text, timestamp: Date.now() }); 
+      db.ref('messages').push({ 
+        userId: currentUid, userName: currentUser, text: text, timestamp: Date.now() 
+      }); 
     } 
     input.value = ''; 
   } catch(e) { alert('Σφάλμα: ' + e.message); } 
@@ -359,42 +366,49 @@ async function sendMsg() {
 function toggleEmoji() { document.getElementById('emojiPanel').classList.toggle('show'); document.getElementById('bannedPanel').classList.remove('show'); document.getElementById('bgControlsPanel').classList.remove('show'); }
 
 function updateUserList() {
-    var users = Object.keys(onlineUsers).sort();
     var list = document.getElementById('userList'); list.innerHTML = '';
-    users.forEach(username => {
+    var usersArray = Object.keys(onlineUsers).map(uid => ({ uid: uid, ...onlineUsers[uid] }));
+    usersArray.sort((a, b) => a.username.localeCompare(b.username));
+
+    usersArray.forEach(u => {
+        var username = u.username;
+        var uid = u.uid;
         var div = document.createElement('div'); div.className = 'user-item';
         var initial = username.charAt(0).toUpperCase();
         var isAdminUser = username.toLowerCase() === 'sakis';
         var avatarClass = isAdminUser ? 'avatar admin-avatar' : 'avatar';
         var adminBadge = isAdminUser ? '<span class="admin-badge">👑admin</span>' : '';
-        var avatarHtml = userAvatars[username.toLowerCase()]
-            ? `<div class="${avatarClass}" onclick="triggerAvatarUpload(this.dataset.user)" data-user="${escapeHtml(username)}"><img src="${userAvatars[username.toLowerCase()]}">${username === currentUser ? '<div class="avatar-upload-hint">📷</div>' : ''}</div>`
-            : `<div class="${avatarClass}" onclick="triggerAvatarUpload(this.dataset.user)" data-user="${escapeHtml(username)}">${initial}${username === currentUser ? '<div class="avatar-upload-hint">📷</div>' : ''}</div>`;
+        var avatarHtml = userAvatars[uid]
+            ? `<div class="${avatarClass}" onclick="triggerAvatarUpload('${uid}')" data-uid="${uid}"><img src="${userAvatars[uid]}">${uid === currentUid ? '<div class="avatar-upload-hint">📷</div>' : ''}</div>`
+            : `<div class="${avatarClass}" onclick="triggerAvatarUpload('${uid}')" data-uid="${uid}">${initial}${uid === currentUid ? '<div class="avatar-upload-hint">📷</div>' : ''}</div>`;
         var lockBtn = ''; var banBtn = '';
-        if (username !== currentUser) {
-            lockBtn = `<button class="private-lock-btn" onclick="startPrivateChat(this.dataset.user)" data-user="${escapeHtml(username)}" title="Ιδιωτικό">🔒</button>`;
-            if (isAdmin) { banBtn = `<button class="ban-user-btn show" onclick="banUser(this.dataset.user)" data-user="${escapeHtml(username)}" title="Ban">🚫</button>`; }
+        if (uid !== currentUid) {
+            lockBtn = `<button class="private-lock-btn" onclick="startPrivateChat('${uid}', '${escapeHtml(username)}')" title="Ιδιωτικό"></button>`;
+            if (isAdmin) { banBtn = `<button class="ban-user-btn show" onclick="banUser('${escapeHtml(username)}')" title="Ban">🚫</button>`; }
         }
         div.innerHTML = `${avatarHtml}<div class="user-info"><div class="user-name">${escapeHtml(username)}${adminBadge}</div><div class="user-status">Online</div></div>${lockBtn}${banBtn}`;
         list.appendChild(div);
     });
-    document.getElementById('onlineNum').textContent = users.length;
-    document.getElementById('userNum').textContent = users.length;
+    document.getElementById('onlineNum').textContent = usersArray.length;
+    document.getElementById('userNum').textContent = usersArray.length;
 }
 
-function triggerAvatarUpload(username) { if (isAvatarUploading) { alert('⏳ Περιμένετε!'); return; } if (username === currentUser) document.getElementById('avatarInput').click(); }
+function triggerAvatarUpload(uid) { if (isAvatarUploading) { alert('⏳ Περιμένετε!'); return; } if (uid === currentUid) document.getElementById('avatarInput').click(); }
 function triggerImageUpload() { document.getElementById('imageUploadInput').click(); }
-function startPrivateChat(username) { 
-  if (username === currentUser) return; 
-  if (!onlineUsers[username]) { alert('Ο χρήστης δεν είναι online!'); return; } 
-  currentPrivateChat = username; document.getElementById('chatMain').classList.add('private-mode'); 
+
+async function startPrivateChat(uid, username) { 
+  if (uid === currentUid) return; 
+  if (!onlineUsers[uid]) { alert('Ο χρήστης δεν είναι online!'); return; } 
+  currentPrivateChat = uid; 
+  currentPrivateChatName = username;
+  document.getElementById('chatMain').classList.add('private-mode'); 
   document.getElementById('privateHeader').classList.add('show'); document.getElementById('mainHeader').style.display = 'none'; 
   document.getElementById('privateWithUser').textContent = username; document.getElementById('msgInput').placeholder = 'Γράψε ιδιωτικό...'; 
   document.getElementById('emojiPanel').classList.remove('show'); 
-  if (window.innerWidth <= 768) closeSidebar(); loadPrivateMessages(username); 
+  if (window.innerWidth <= 768) closeSidebar(); loadPrivateMessages(uid, username); 
 }
 function closePrivateChat() { 
-  currentPrivateChat = null; document.getElementById('chatMain').classList.remove('private-mode'); 
+  currentPrivateChat = null; currentPrivateChatName = null; document.getElementById('chatMain').classList.remove('private-mode'); 
   document.getElementById('privateHeader').classList.remove('show'); document.getElementById('mainHeader').style.display = 'flex'; 
   document.getElementById('msgInput').placeholder = 'Γράψε ένα μήνυμα...'; loadMessages(); 
 }
@@ -408,24 +422,24 @@ async function handleImageUpload(event) {
   try {
     var uploadResult = await uploadToImgur(file); var imageUrl = uploadResult.link; var deletehash = uploadResult.deletehash; var timestamp = Date.now();
     if (currentPrivateChat) {
-      var chatId = [currentUser.toLowerCase(), currentPrivateChat.toLowerCase()].sort().join('_');
-      db.ref('private_messages/' + chatId).push({ sender: currentUser, receiver: currentPrivateChat, message: '[📸 Εικόνα]', image: imageUrl, imageDeletehash: deletehash, timestamp: timestamp });
+      var chatId = [currentUid, currentPrivateChat].sort().join('_');
+      db.ref('private_messages/' + chatId).push({ senderUid: currentUid, senderName: currentUser, receiverUid: currentPrivateChat, receiverName: currentPrivateChatName, message: '[📸 Εικόνα]', image: imageUrl, imageDeletehash: deletehash, timestamp: timestamp });
     } else {
-      db.ref('messages').push({ user: currentUser, text: '[📸 Εικόνα]', image: imageUrl, imageDeletehash: deletehash, timestamp: timestamp });
+      db.ref('messages').push({ userId: currentUid, userName: currentUser, text: '[📸 Εικόνα]', image: imageUrl, imageDeletehash: deletehash, timestamp: timestamp });
     }
   } catch(e) { alert('Σφάλμα: ' + e.message); } 
   finally { imageBtn.innerHTML = originalHTML; imageBtn.classList.remove('loading'); event.target.value = ''; }
 }
 
-function showPrivateNotification(sender) { 
-  if (pendingPrivateNotif) return; pendingPrivateNotif = sender; 
-  document.getElementById('privateNotifText').textContent = 'Ο ' + sender + ' σου έστειλε ιδιωτικό!'; 
+function showPrivateNotification(senderName, senderUid) { 
+  if (pendingPrivateNotif) return; pendingPrivateNotif = { name: senderName, uid: senderUid }; 
+  document.getElementById('privateNotifText').textContent = 'Ο ' + senderName + ' σου έστειλε ιδιωτικό!'; 
   document.getElementById('privateNotifOverlay').classList.add('show'); 
 }
 function acceptPrivateNotification() { 
   if (pendingPrivateNotif) { 
     var sender = pendingPrivateNotif; pendingPrivateNotif = null; 
-    document.getElementById('privateNotifOverlay').classList.remove('show'); startPrivateChat(sender); 
+    document.getElementById('privateNotifOverlay').classList.remove('show'); startPrivateChat(sender.uid, sender.name); 
   } 
 }
 
@@ -434,27 +448,27 @@ function subscribeToMessages() {
   db.ref('messages').on('child_added', (snap) => {
     var msg = snap.val(); msg._id = snap.key;
     if (msg.timestamp && msg.timestamp < connectTime) return;
-    if (!currentPrivateChat) { addMessageToUI(msg, false); if (msg.user.toLowerCase() !== currentUser.toLowerCase()) { playNotificationSound(); } }
+    if (!currentPrivateChat) { addMessageToUI(msg, false); if (msg.userId !== currentUid) { playNotificationSound(); } }
   });
   db.ref('messages').on('child_removed', (snap) => {
     var removedId = snap.key; if (!currentPrivateChat) { var msgDiv = document.querySelector(`.msg[data-msg-id="${removedId}"]`); if (msgDiv) msgDiv.remove(); }
   });
   db.ref('private_messages').on('child_added', (chatSnap) => {
-    var chatId = chatSnap.key; if (!chatId.includes(currentUser.toLowerCase())) return;
+    var chatId = chatSnap.key; if (!chatId.includes(currentUid)) return;
     db.ref('private_messages/' + chatId).on('value', (snap) => {
       if (!snap.exists() && currentPrivateChat) {
-        var currentChatId = [currentUser.toLowerCase(), currentPrivateChat.toLowerCase()].sort().join('_');
+        var currentChatId = [currentUid, currentPrivateChat].sort().join('_');
         if (chatId === currentChatId) { document.getElementById('msgContainer').innerHTML = ''; }
       }
     });
     db.ref('private_messages/' + chatId).on('child_added', (msgSnap) => {
       var msg = msgSnap.val(); msg._id = msgSnap.key;
       if (msg.timestamp && msg.timestamp < connectTime) return;
-      var isForMe = msg.receiver && msg.receiver.toLowerCase() === currentUser.toLowerCase();
-      var isFromMe = msg.sender && msg.sender.toLowerCase() === currentUser.toLowerCase();
-      if (isForMe && !(currentPrivateChat && currentPrivateChat.toLowerCase() === msg.sender.toLowerCase())) { showPrivateNotification(msg.sender); }
+      var isForMe = msg.receiverUid === currentUid;
+      var isFromMe = msg.senderUid === currentUid;
+      if (isForMe && !(currentPrivateChat && currentPrivateChat === msg.senderUid)) { showPrivateNotification(msg.senderName, msg.senderUid); }
       if (currentPrivateChat && (isForMe || isFromMe)) { 
-        var currentChatId = [currentUser.toLowerCase(), currentPrivateChat.toLowerCase()].sort().join('_'); 
+        var currentChatId = [currentUid, currentPrivateChat].sort().join('_'); 
         if (chatId === currentChatId) { addMessageToUI(msg, true); if (isForMe) msgSnap.ref.update({ is_read: true }); } 
       }
     });
@@ -467,74 +481,104 @@ function subscribeToMessages() {
 function setupPresenceInitial() { 
   db.ref('users').on('value', (snap) => { 
     onlineUsers = {}; snap.forEach(child => { 
-      var user = child.val(); if (user.username) { 
-        onlineUsers[user.username] = true; 
-        if (user.avatar) { var lower = user.username.toLowerCase(); userAvatars[lower] = user.avatar; localStorage.setItem('user_avatar_' + lower, user.avatar); } 
+      var user = child.val(); 
+      if (user.uid && user.username) { 
+        onlineUsers[user.uid] = { username: user.username, avatar: user.avatar || null }; 
+        if (user.avatar) { userAvatars[user.uid] = user.avatar; localStorage.setItem('user_avatar_' + user.uid, user.avatar); } 
       } 
     }); updateUserList(); 
   }); 
 }
 
 async function registerUser() {
-  var username = document.getElementById('userIn').value.trim(); var password = document.getElementById('passIn').value.trim();
-  var err = document.getElementById('err'); err.style.display = 'none';
+  var username = document.getElementById('userIn').value.trim(); 
+  var password = document.getElementById('passIn').value.trim();
+  var err = document.getElementById('err'); 
+  err.style.display = 'none';
+  
   if (!username || !password) { err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; err.style.display = 'block'; return; }
   if (username.includes(":")) { err.textContent = '⚠️ Το όνομα δεν μπορεί να περιέχει ":"'; err.style.display = 'block'; return; }
   if (password.length < 3) { err.textContent = '⚠️ Ο κωδικός πρέπει να είναι τουλάχιστον 3 χαρακτήρες!'; err.style.display = 'block'; return; }
+  
   var isBanned = await checkIfBanned(username);
   if (isBanned) { err.textContent = '🚫 Αυτό το όνομα είναι banned!'; err.style.display = 'block'; return; }
-  var existingSnap = await db.ref('registered_users/' + username.toLowerCase()).once('value');
-  if (existingSnap.exists()) { err.textContent = '❌ Αυτό το όνομα είναι ήδη κατοχυρωμένο!'; err.style.display = 'block'; return; }
-  try {
-    await db.ref('registered_users/' + username.toLowerCase()).set({ username: username, password: password, avatar: null, created_at: Date.now() });
-    localStorage.setItem('chat_username', username); localStorage.setItem('chat_password', password);
-    await enterChat(username);
-  } catch(e) { err.textContent = 'Σφάλμα: ' + e.message; err.style.display = 'block'; }
+  
+  var lowerUsername = username.toLowerCase();
+
+  var usersSnap = await db.ref('registered_users').orderByChild('username').equalTo(lowerUsername).once('value');
+  if (usersSnap.exists()) { err.textContent = '❌ Αυτό το όνομα είναι ήδη κατοχυρωμένο!'; err.style.display = 'block'; return; }
+
+  var newUid = 'uid_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+
+  await db.ref('registered_users/' + newUid).set({
+    username: username, password: password, avatar: null, created_at: Date.now()
+  });
+  
+  localStorage.setItem('chat_uid', newUid);
+  localStorage.setItem('chat_username', username); 
+  localStorage.setItem('chat_password', password);
+  
+  alert('✅ Ο λογαριασμός δημιουργήθηκε.');
+  window.location.reload();
 }
 
 async function goChat(isAutoLogin = false) { 
   var username = document.getElementById('userIn').value.trim(); var password = document.getElementById('passIn').value.trim();
   var err = document.getElementById('err'); err.style.display = 'none'; 
   if (!username || !password) { err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; err.style.display = 'block'; return; }
+  
   var isBanned = await checkIfBanned(username);
   if (isBanned) { err.textContent = '🚫 Αυτό το όνομα είναι banned!'; err.style.display = 'block'; if (isAutoLogin) { localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password'); } return; } 
+  
   if (username.toLowerCase() === "sakis" && password !== "019630") { 
     if (isAutoLogin) { localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password'); } 
     else { err.textContent = 'Λάθος κωδικός!'; err.style.display = 'block'; } return; 
   }
-  var regSnap = await db.ref('registered_users/' + username.toLowerCase()).once('value');
+  
+  var lowerUsername = username.toLowerCase();
+  var regSnap = await db.ref('registered_users').orderByChild('username').equalTo(lowerUsername).once('value');
+  
   if (!regSnap.exists() && username.toLowerCase() !== "sakis") {
     err.textContent = '❌ Δεν υπάρχει λογαριασμός. Κάνε εγγραφή!'; err.style.display = 'block';
     if (isAutoLogin) { localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password'); } return;
   }
-  if (username.toLowerCase() !== "sakis") {
-    var regData = regSnap.val();
-    if (regData.password !== password) { err.textContent = '❌ Λάθος κωδικός!'; err.style.display = 'block'; if (isAutoLogin) { localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password'); } return; }
+  
+  var targetUid = null;
+  var regData = null;
+  regSnap.forEach(child => { targetUid = child.key; regData = child.val(); });
+
+  if (username.toLowerCase() !== "sakis" && regData.password !== password) { 
+    err.textContent = '❌ Λάθος κωδικός!'; err.style.display = 'block'; 
+    if (isAutoLogin) { localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password'); } return; 
   }
+  
   try { 
-    var sessionSnap = await db.ref('active_sessions/' + username).once('value'); var existing = sessionSnap.val();
+    var sessionSnap = await db.ref('active_sessions/' + targetUid).once('value'); var existing = sessionSnap.val();
     if (existing) { if (existing.session_id !== currentSessionId) { err.textContent = 'Το όνομα είναι ήδη συνδεδεμένο αλλού!'; err.style.display = 'block'; return; } } 
-    else { await db.ref('active_sessions/' + username).set({ session_id: currentSessionId, timestamp: Date.now() }); } 
-    localStorage.setItem('chat_username', username); localStorage.setItem('chat_password', password);
-    await enterChat(username);
+    else { await db.ref('active_sessions/' + targetUid).set({ session_id: currentSessionId, timestamp: Date.now() }); } 
+    
+    localStorage.setItem('chat_uid', targetUid);
+    localStorage.setItem('chat_username', username); 
+    localStorage.setItem('chat_password', password);
+    await enterChat(username, targetUid);
   } catch(e) { err.textContent = 'Σφάλμα: ' + e.message; err.style.display = 'block'; } 
 }
 
-async function enterChat(username) {
-  currentUser = username; connectTime = Date.now();
+async function enterChat(username, uid) {
+  currentUser = username; currentUid = uid; connectTime = Date.now();
   if (currentUser.toLowerCase() === "sakis") { 
     isAdmin = true; document.getElementById('adminClearBtn').style.display = 'block'; 
     document.getElementById('bannedBtn').classList.add('show'); document.getElementById('clearBtn').classList.add('show'); 
   } else { 
     isAdmin = false; document.getElementById('clearBtn').classList.remove('show'); document.getElementById('bannedBtn').classList.remove('show');
   } 
-  var regSnap = await db.ref('registered_users/' + username.toLowerCase()).once('value'); var regData = regSnap.val();
-  if (regData && regData.avatar) { userAvatars[username.toLowerCase()] = regData.avatar; localStorage.setItem('user_avatar_' + username.toLowerCase(), regData.avatar); }
-  var trackData = { username: currentUser }; 
-  var localAvatar = userAvatars[currentUser.toLowerCase()] || localStorage.getItem('user_avatar_' + currentUser.toLowerCase());
+  
+  var trackData = { uid: currentUid, username: currentUser }; 
+  var localAvatar = userAvatars[currentUid] || localStorage.getItem('user_avatar_' + currentUid);
   if (localAvatar) { trackData.avatar = localAvatar; } 
-  await db.ref('users/' + currentUser).set(trackData);
-  db.ref('users/' + currentUser).onDisconnect().remove();
+  
+  await db.ref('users/' + currentUid).set(trackData);
+  db.ref('users/' + currentUid).onDisconnect().remove();
   document.getElementById('loginDiv').style.display = 'none'; document.getElementById('chatApp').style.display = 'flex'; 
   document.getElementById('msgInput').focus(); 
   await loadMessages(); subscribeToMessages(); subscribeToBans(); setupPresenceInitial();
@@ -545,22 +589,22 @@ async function adminClearAll() {
   if (!confirm("⚠️ Διαγραφή ΟΛΩΝ των λογαριασμών ΕΚΤΟΣ από εσένα (sakis);\n\nΘα χαθούν ονόματα, κωδικοί, φωτογραφίες.\n\nΕσύ θα παραμείνεις!")) return; 
   try { 
     var regSnap = await db.ref('registered_users').once('value'); var updates = {};
-    regSnap.forEach(child => { var username = child.key; if (username.toLowerCase() !== 'sakis') { updates['registered_users/' + username] = null; } });
+    regSnap.forEach(child => { var uid = child.key; if (child.val().username.toLowerCase() !== 'sakis') { updates['registered_users/' + uid] = null; } });
     var sessionsSnap = await db.ref('active_sessions').once('value');
-    sessionsSnap.forEach(child => { var username = child.key; if (username.toLowerCase() !== 'sakis') { updates['active_sessions/' + username] = null; } });
+    sessionsSnap.forEach(child => { updates['active_sessions/' + child.key] = null; });
     var usersSnap = await db.ref('users').once('value');
-    usersSnap.forEach(child => { var username = child.key; if (username.toLowerCase() !== 'sakis') { updates['users/' + username] = null; } });
+    usersSnap.forEach(child => { if (child.val().username.toLowerCase() !== 'sakis') { updates['users/' + child.key] = null; } });
     await db.ref().update(updates); alert("✅ Καθαρισμός ολοκληρώθηκε!"); ensureAdminOnline();
   } catch(e) { alert("Σφάλμα: " + e.message); } 
 }
 
 async function logoutChat() { 
-  if (!confirm("⚠️ Προσοχή! Αν αποσυνδεθείτε, το όνομά σας αποδεσμεύεται. Αν το προλάβει και το κατοχυρώσει άλλος χρήστης, θα χάσετε μόνιμα το όνομα και τη φωτογραφία σας και θα πρέπει να κάνετε νέα εγγραφή από την αρχή.Θέλετε σίγουρα να αποσυνδεθείτε;")) return; 
+  if (!confirm("⚠️ Προσοχή! Αν αποσυνδεθείτε, το όνομά σας αποδεσμεύεται. Θέλετε σίγουρα να αποσυνδεθείτε;")) return; 
   document.getElementById('playerIframe').src = ''; document.getElementById('playerPanel').classList.remove('show'); isPlayerOpen = false; closeTvLiveWindow();
   try { 
-    await db.ref('active_sessions/' + currentUser).remove(); await db.ref('users/' + currentUser).remove();
-    localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password');
-    currentUser = ''; document.getElementById('chatApp').style.display = 'none'; document.getElementById('loginDiv').style.display = 'flex'; 
+    await db.ref('active_sessions/' + currentUid).remove(); await db.ref('users/' + currentUid).remove();
+    localStorage.removeItem('chat_uid'); localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password');
+    currentUser = ''; currentUid = ''; document.getElementById('chatApp').style.display = 'none'; document.getElementById('loginDiv').style.display = 'flex'; 
     document.getElementById('userIn').value = ''; document.getElementById('passIn').value = '';
   } catch(e) { console.error('Logout error:', e); alert('Σφάλμα: ' + e.message); } 
 }
@@ -630,7 +674,6 @@ async function startRecording() {
   }
 }
 
-// ΔΙΟΡΘΩΜΕΝΗ: Πλήρης απελευθέρωση μικροφώνου για να μην ανταγωνίζεται το ραδιόφωνο
 function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
@@ -667,10 +710,10 @@ async function sendAudioMessage() {
     if (data.secure_url) {
       const audioUrl = data.secure_url; const timestamp = Date.now();
       if (currentPrivateChat) {
-        const chatId = [currentUser.toLowerCase(), currentPrivateChat.toLowerCase()].sort().join('_');
-        await db.ref('private_messages/' + chatId).push({ sender: currentUser, receiver: currentPrivateChat, message: '[🎙️ Ηχητικό Μήνυμα]', audioUrl: audioUrl, timestamp: timestamp });
+        const chatId = [currentUid, currentPrivateChat].sort().join('_');
+        await db.ref('private_messages/' + chatId).push({ senderUid: currentUid, senderName: currentUser, receiverUid: currentPrivateChat, receiverName: currentPrivateChatName, message: '[🎙️ Ηχητικό Μήνυμα]', audioUrl: audioUrl, timestamp: timestamp });
       } else {
-        await db.ref('messages').push({ user: currentUser, text: '[🎙️ Ηχητικό Μήνυμα]', audioUrl: audioUrl, timestamp: timestamp });
+        await db.ref('messages').push({ userId: currentUid, userName: currentUser, text: '[🎙️ Ηχητικό Μήνυμα]', audioUrl: audioUrl, timestamp: timestamp });
       }
       cancelRecording();
     } else { throw new Error('Αποτυχία μεταφόρτωσης στο Cloudinary'); }
