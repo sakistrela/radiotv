@@ -126,13 +126,13 @@ function toggleSound() {
 function playNotificationSound() { if (soundVolume > 0) { notificationSound.currentTime = 0; notificationSound.play().catch(e => {}); } }
 
 var emojiCategories = {
-  smileys: ['😀','😃','😄','😁','','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','','😗','😙','😚','','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','','😏','😒','😞','😔','😟','😕','🙁','😖','😫','😩','','😭','😤','😠','😡','🤬','😳','','😨','😰','😥','😓','🤗','🤔','','😶','😐','😑','😬','🙄','😯','😧','😮','😲','😴','','😵','🤐','','🤮','🤧','','🤒','🤕','','🤠','😈','👿','💩','💀','☠️','👽','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊'],
-  animals: ['🐶','','🐭','🐹','','🦊','🐻','','🐨','🐯','','🐮','🐷','','🐵','🙈','','🙊','🐔','','🐦','🐤','','🦆','🦅','','🦇','🐺','','🐝','🦋','','🐞','🐜','','🦗','🕷️','','🐢','🐍','','🦖','🦕','🐙','🦑','🦐','🦞','🦀','','🐠','🐟','','🐳','🐋','','🐊','🐅','','🦓','🦍','','🐘','🦛','','🐪','🐫','','🦘','🐃','','🐄','🐎','','🐏','🐑','','🐐','🦌','','🐩','🦮','','🐓','🦃','','🦜','🦢','','🕊️','🐇','','🦨','🦡','🦦','🦥','🐁','🐀','🐿️','','🐾','🐉',''],
-  food: ['🍏','','🍐','🍊','','🍌','🍉','','🍓','🫐','','🍒','🍑','','🍍','🥥','','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','','🌽','🥕','','🧄','🧅','','🍠','🥐','🥖','🍞','🥖','🥨','🧀','🥚','','🧈','🥞','','🥓','🌭','','🍟','🍕','','🥙','🌮','','🫔','🥗','','🫕','🥫','','🍜','🍲','','🍣','🍱','','🦪','🍤','','🍘','🍥','','🥮','🍢','','🍧','🍨','','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🫗','🍼','','☕','🍵','','🥤','🧋','','🍺','🍻','','🍷','🥃','','🍹','🧉','','🧊','🥄','','🍽️','🥣','','🥢','🧂'],
-  activities: ['⚽','','🏈','⚾','','🎾','🏐','','🥏','🎱','','🏓','🏸','','🏑','🥍','','🪃','🥅','','🪁','🏹','','🤿','🥊','','🎽','🛹','','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','️','🤼','🤸','⛹️','🤺','','🏌️','🏇','🧘','🏄','','🤽','🚣','','🚵','🚴','','🥇','🥈','','🏅','🎖️','️','🎗️','🎫','🎟️','🎪','','🎭','🩰','','🎬','🎤','','🎼','🎹','','🪘','🎷','','🪗','🎸','','🎻','🎲','♟️','🎯','🎳','','🎰','🧩'],
-  travel: ['🚗','🚕','','🚌','🚎','️','🚓','🚑','🚒','🚐','','🚚','🚛','🚜','🏍️','🛵','','🛴','🛺','','🚔','🚍','','🚘','🚡','','🚟','🚃','','🚞','🚝','','🚅','🚈','','🚆','🚉','️','🛫','🛬','🛩️','💺','️','🚀','🛸','','🛶','⛵','','🛥️','🛳️','⛴️','🚢','⚓','🪝','⛽','🚧','🚦','🚥','🗺️','🗿','','🗼','🏰','','🏟️','🎡','','🎠','⛲','️','🏖️','🏝️','🏜️','🌋','️','🏔️','🗻','🏕️','⛺','','🏠','🏡','️','🏚️','🏗️','🏭','🏢','','🏣','🏤','','🏦','🏨','','🏫','🏩','💒','🏛️','⛪','','🕍','🛕','','⛩️','🛤️','🛣️','🗾','🎑','🏞️','','🌄','🌠','','🎆','🌇','','🏙️','🌃','','🌉','🌁'],
-  objects: ['⌚','📱','📲','💻','⌨️','🖥️','🖨️','️','🖲️','🕹️','🗜️','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','','📠','📺','','🎙️','🎚️','🎛️','🧭','️','⏲️','⏰','🕰️','⌛','','📡','🔋','','💡','🔦','️','🪔','🧯','🛢️','💸','💵','💴','💶','💷','🪙','💰','💳','💎','️','🪜','🧰','🪛','🔧','🔨','⚒️','🛠️','️','🪚','🔩','⚙️','🪤','','⛓️','🧲','','💣','🧨','','🔪','🗡️','️','🛡️','','⚰️','🪦','⚱️','🏺','','📿','🧿','💈','⚗️','🔭','','🕳️','🩹','','💊','💉','🩸','🧬','🦠','','🧪','🌡️','','🪠','🧺','','🚽','🚰','','🛁','🛀','','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','️','🚪','🪑','️','🛏️','🛌','🧸','🪆','️','🪞','🪟','️','🛒','🎁','🎈','🎏','🎀','🪄','🪅','','🎉','🎎','','🎐','🧧','✉️','📩','📨','','💌','📥','','📦','🏷️','','📪','📫','','📭','📮','','📜','📃','','📑','🧾','','📈','📉','️','🗓️','📆','📅','🗑️','','🗃️','🗳️','🗄️','📋','📁','📂','🗂️','🗞️','📰','','📔','📒','','📗','📘','📙','📚','📖','','🧷','🔗','','🖇️','📐','','🧮','📌','','✂️','🖊️','🖋️','✒️','🖌️','🖍️','📝','️','🔍','🔎','','🔐','🔒',''],
-  symbols: ['❤️','','💛','💚','💙','💜','🖤','🤍','','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','','🈹','🈲','️','🅱️','','🆑','🅾️','','❌','⭕','','⛔','📛','','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','','🚭','❗','❕','❓','❔','‼️','️','🔅','🔆','️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','','❇️','✳️','','🌐','💠','Ⓜ️','🌀','💤','','🚾','♿','️','🛗','🈳','🈂️','🛂','','🛄','🛅','🚹','🚺','🚼','️','🚻','','🎦','📶','','🔣','ℹ️','','🔡','🔠','','🆗','🆙','🆒','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔢','#️','*️⃣','⏏️','▶️','⏸️','️','⏹️','⏺️','⏭️','⏮️','','⏪','⏫','⏬','◀️','🔼','🔽','➡️','⬅️','⬆️','⬇️','️','↘️','↙️','↖️','↕️','↔️','↪️','↩️','️','⤵️','','🔁','🔂','','🔃','🎵','','➕','➖','➗','✖️','♾️','💲','💱','™️','©️','®️','👁️‍🗨️','🔚','🔙','🔛','🔝','🔜','〰️','➰','➿','✔️','☑️','🔘','🔴','🟠','🟡','','🔵','🟣','','⚪','🟤','🔺','🔻','','🔹','🔶','','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','','🟧','🟨','','🟦','🟪','','⬜','🟫','','🔇','🔉','','🔔','🔕','','📢','👁️‍🗨️','💬','💭','🗯️','♠️','♣️','♥️','♦️','🃏','🎴','🀄','','🕑','🕒','','🕔','🕕','','🕗','🕘','','🕚','🕛']
+  smileys: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🥳','😏','😒','😞','😔','😟','😕','🙁','😖','😫','😩','🥺','😭','😤','😠','😡','🤬','😳','🥶','😨','😰','😥','😓','🤗','🤔','🤫','😶','😐','😑','😬','🙄','😯','😧','😮','😲','😴','🤤','😵','🤐','🥴','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','💩','💀','☠️','👽','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊'],
+  animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🐣','🦆','🦅','🦉','🦇','🐺','🦄','🐝','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿️','🦔','🐾','🐉','🐲'],
+  food: ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕','🫒','🧄','🧅','🥔','🍠','🥐','🥖','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🌭','🍔','🍟','🍕','🫓','🥙','🌮','🌯','🫔','🥗','🥘','🫕','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍘','🍥','🥠','🥮','🍢','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🫗','🍼','🫖','☕','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊','🥄','🍴','🍽️','🥣','🥡','🥢','🧂'],
+  activities: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🤹','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🪘','🎷','🎺','🪗','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮','🎰','🧩'],
+  travel: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍️','🛵','🚲','🛴','🛺','🚨','🚔','🚍','🚖','🚘','🚡','🚠','🚟','🚃','🚋','🚞','🚝','🚄','🚅','🚈','🚇','🚆','🚉','✈️','🛫','🛬','🛩️','💺','🛰️','🚀','🛸','🚁','🛶','⛵','🚤','🛥️','🛳️','⛴️','🚢','⚓','🪝','⛽','🚧','🚦','🚥','🗺️','🗿','🗽','🗼','🏰','🏯','🏟️','🎡','🎢','🎠','⛲','⛱️','🏖️','🏝️','🏜️','🌋','⛰️','🏔️','🗻','🏕️','⛺','🛖','🏠','🏡','🏘️','🏚️','🏗️','🏭','🏢','🏬','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏩','💒','🏛️','⛪','🕌','🕍','🛕','🕋','⛩️','🛤️','🛣️','🗾','🎑','🏞️','🌅','🌄','🌠','🎇','🎆','🌇','🌆','🏙️','🌃','🌌','🌉','🌁'],
+  objects: ['⌚','📱','📲','💻','⌨️','🖥️','🖨️','🖱️','🖲️','🕹️','🗜️','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🎙️','🎚️','🎛️','🧭','⏱️','⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🔌','💡','🔦','🕯️','🪔','🧯','🛢️','💸','💵','💴','💶','💷','🪙','💰','💳','💎','⚖️','🪜','🧰','🪛','🔧','🔨','⚒️','🛠️','⛏️','🪚','🔩','⚙️','🪤','🧱','⛓️','🧲','🔫','💣','🧨','🪓','🔪','🗡️','⚔️','🛡️','🚬','⚰️','🪦','⚱️','🏺','🔮','📿','🧿','💈','⚗️','🔭','🔬','🕳️','🩹','🩺','💊','💉','🩸','🧬','🦠','🧫','🧪','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🪄','🪅','🎊','🎉','🎎','🏮','🎐','🧧','✉️','📩','📨','📧','💌','📥','📤','📦','🏷️','🪧','📪','📫','📬','📭','📮','📯','📜','📃','📄','📑','🧾','📊','📈','📉','🗒️','🗓️','📆','📅','🗑️','📇','🗃️','🗳️','🗄️','📋','📁','📂','🗂️','🗞️','📰','📓','📔','📒','📕','📗','📘','📙','📚','📖','🔖','🧷','🔗','📎','🖇️','📐','📏','🧮','📌','📍','✂️','🖊️','🖋️','✒️','🖌️','🖍️','📝','✏️','🔍','🔎','🔏','🔐','🔒','🔓'],
+  symbols: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🛗','🈳','🈂️','🛂','🛃','🛄','🛅','🚹','🚺','🚼','⚧️','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🆖','🆗','🆙','🆒','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔢','#️⃣','*️⃣','⏏️','▶️','⏸️','⏯️','⏹️','⏺️','⏭️','⏮️','⏩','⏪','⏫','⏬','◀️','🔼','🔽','➡️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↪️','↩️','⤴️','⤵️','🔀','🔁','🔂','🔄','🔃','🎵','🎶','➕','➖','➗','✖️','♾️','💲','💱','™️','©️','®️','👁️‍🗨️','🔚','🔙','🔛','🔝','🔜','〰️','➰','➿','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📣','📢','👁️‍🗨️','💬','💭','🗯️','♠️','♣️','♥️','♦️','🃏','🎴','🀄','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛']
 };
 
 Object.keys(emojiCategories).forEach(category => { 
@@ -200,69 +200,6 @@ async function unbanUser(username) {
   try { db.ref('banned_users/' + username.toLowerCase()).remove(); alert('✅ Αφαιρέθηκε!'); loadBannedUsers(); renderBannedUsersPanel(); ensureAdminOnline(); } 
   catch(e) { alert('Σφάλμα: ' + e.message); } 
 }
-
-// ΝΕΑ ΣΥΝΑΡΤΗΣΗ: Πλήρης διαγραφή χρήστη και όλων των δεδομένων του
-async function deleteUserCompletely(username) {
-  if (!isAdmin) { alert('Δεν έχεις δικαιώματα!'); return; }
-  
-  if (!confirm(`⚠️ ΠΡΟΣΟΧΗ!\n\nΔιαγραφή ΟΛΩΝ των δεδομένων του χρήστη "${username}"\n\nΘα διαγραφούν:\n✓ Ο λογαριασμός και ο κωδικός\n✓ Όλα τα δημόσια μηνύματα\n✓ Όλα τα ιδιωτικά μηνύματα\n✓ Η φωτογραφία προφίλ\n\nΕίσαι σίγουρος;`)) {
-    return;
-  }
-
-  try {
-    const lower = username.toLowerCase();
-    const updates = {};
-
-    // 1. Διαγραφή βασικών δεδομένων χρήστη
-    updates[`registered_users/${lower}`] = null;
-    updates[`users/${username}`] = null;
-    updates[`active_sessions/${username}`] = null;
-    updates[`banned_users/${lower}`] = null;
-
-    await db.ref().update(updates);
-
-    // 2. Διαγραφή όλων των δημόσιων μηνυμάτων του χρήστη
-    const messagesSnap = await db.ref('messages').once('value');
-    const msgUpdates = {};
-    messagesSnap.forEach(child => {
-      const msg = child.val();
-      if (msg.user && msg.user.toLowerCase() === lower) {
-        msgUpdates[`messages/${child.key}`] = null;
-      }
-    });
-    if (Object.keys(msgUpdates).length > 0) {
-      await db.ref().update(msgUpdates);
-    }
-
-    // 3. Διαγραφή όλων των ιδιωτικών μηνυμάτων (όπου συμμετέχει ο χρήστης)
-    const privSnap = await db.ref('private_messages').once('value');
-    const privUpdates = {};
-    privSnap.forEach(child => {
-      // Το chatId έχει τη μορφή user1_user2, οπότε ελέγχουμε αν περιέχει το όνομα
-      if (child.key.includes(lower)) {
-        privUpdates[`private_messages/${child.key}`] = null;
-      }
-    });
-    if (Object.keys(privUpdates).length > 0) {
-      await db.ref().update(privUpdates);
-    }
-
-    // 4. Καθαρισμός τοπικής μνήμης για το avatar
-    delete userAvatars[lower];
-    localStorage.removeItem('user_avatar_' + lower);
-
-    alert(`✅ Ο χρήστης "${username}" και όλα τα δεδομένα του διαγράφηκαν πλήρως!`);
-    updateUserList();
-    if (document.getElementById('bannedPanel').classList.contains('show')) {
-      loadBannedUsers().then(() => renderBannedUsersPanel());
-    }
-    
-  } catch (err) {
-    alert('Σφάλμα κατά τη διαγραφή: ' + err.message);
-    console.error(err);
-  }
-}
-
 async function loadBannedUsers() { 
   return new Promise((resolve) => { db.ref('banned_users').once('value', (snap) => { bannedUsersList = []; snap.forEach(child => { bannedUsersList.push({ username: child.key, ...child.val() }); }); resolve(); }); }); 
 }
@@ -357,6 +294,7 @@ async function loadPrivateMessages(otherUser) {
   });
 }
 
+// ΔΙΟΡΘΩΜΕΝΗ: Προσθήκη preload="none" και requestAnimationFrame για ομαλό scroll
 function addMessageToUI(msg, isPrivate) {
   var container = document.getElementById('msgContainer');
   if (msg._id) { var existingMsg = container.querySelector(`.msg[data-msg-id="${msg._id}"]`); if (existingMsg) return; }
@@ -397,7 +335,7 @@ function addMessageToUI(msg, isPrivate) {
 }
 
 async function deleteImage(firebasePath, deletehash, buttonElement) {
-  if (!confirm('️ Διαγραφή ΤΕΛΕΙΩΣ από παντού;')) return;
+  if (!confirm('⚠️ Διαγραφή ΤΕΛΕΙΩΣ από παντού;')) return;
   buttonElement.disabled = true; buttonElement.textContent = '⏳ Διαγραφή...';
   try {
     await fetch(`https://api.imgur.com/3/image/${deletehash}`, { method: "DELETE", headers: { "Authorization": "Client-ID 546c25a59c58ad7" } });
@@ -428,18 +366,14 @@ function updateUserList() {
         var initial = username.charAt(0).toUpperCase();
         var isAdminUser = username.toLowerCase() === 'sakis';
         var avatarClass = isAdminUser ? 'avatar admin-avatar' : 'avatar';
-        var adminBadge = isAdminUser ? '<span class="admin-badge">admin</span>' : '';
+        var adminBadge = isAdminUser ? '<span class="admin-badge">👑admin</span>' : '';
         var avatarHtml = userAvatars[username.toLowerCase()]
             ? `<div class="${avatarClass}" onclick="triggerAvatarUpload(this.dataset.user)" data-user="${escapeHtml(username)}"><img src="${userAvatars[username.toLowerCase()]}">${username === currentUser ? '<div class="avatar-upload-hint">📷</div>' : ''}</div>`
             : `<div class="${avatarClass}" onclick="triggerAvatarUpload(this.dataset.user)" data-user="${escapeHtml(username)}">${initial}${username === currentUser ? '<div class="avatar-upload-hint">📷</div>' : ''}</div>`;
         var lockBtn = ''; var banBtn = '';
         if (username !== currentUser) {
             lockBtn = `<button class="private-lock-btn" onclick="startPrivateChat(this.dataset.user)" data-user="${escapeHtml(username)}" title="Ιδιωτικό">🔒</button>`;
-            if (isAdmin) { 
-                banBtn = `<button class="ban-user-btn show" onclick="banUser(this.dataset.user)" data-user="${escapeHtml(username)}" title="Ban" style="margin-right:5px;">🚫</button>`;
-                // Προσθήκη κουμπιού ΠΛΗΡΟΥΣ ΔΙΑΓΡΑΦΗΣ
-                banBtn += `<button class="ban-user-btn show" onclick="deleteUserCompletely(this.dataset.user)" data-user="${escapeHtml(username)}" title="Πλήρης Διαγραφή" style="color: #ff4444;">🗑️</button>`;
-            }
+            if (isAdmin) { banBtn = `<button class="ban-user-btn show" onclick="banUser(this.dataset.user)" data-user="${escapeHtml(username)}" title="Ban">🚫</button>`; }
         }
         div.innerHTML = `${avatarHtml}<div class="user-info"><div class="user-name">${escapeHtml(username)}${adminBadge}</div><div class="user-status">Online</div></div>${lockBtn}${banBtn}`;
         list.appendChild(div);
@@ -475,7 +409,7 @@ async function handleImageUpload(event) {
     var uploadResult = await uploadToImgur(file); var imageUrl = uploadResult.link; var deletehash = uploadResult.deletehash; var timestamp = Date.now();
     if (currentPrivateChat) {
       var chatId = [currentUser.toLowerCase(), currentPrivateChat.toLowerCase()].sort().join('_');
-      db.ref('private_messages/' + chatId).push({ sender: currentUser, receiver: currentPrivateChat, message: '[ Εικόνα]', image: imageUrl, imageDeletehash: deletehash, timestamp: timestamp });
+      db.ref('private_messages/' + chatId).push({ sender: currentUser, receiver: currentPrivateChat, message: '[📸 Εικόνα]', image: imageUrl, imageDeletehash: deletehash, timestamp: timestamp });
     } else {
       db.ref('messages').push({ user: currentUser, text: '[📸 Εικόνα]', image: imageUrl, imageDeletehash: deletehash, timestamp: timestamp });
     }
@@ -545,12 +479,12 @@ async function registerUser() {
   var username = document.getElementById('userIn').value.trim(); var password = document.getElementById('passIn').value.trim();
   var err = document.getElementById('err'); err.style.display = 'none';
   if (!username || !password) { err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; err.style.display = 'block'; return; }
-  if (username.includes(":")) { err.textContent = '️ Το όνομα δεν μπορεί να περιέχει ":"'; err.style.display = 'block'; return; }
+  if (username.includes(":")) { err.textContent = '⚠️ Το όνομα δεν μπορεί να περιέχει ":"'; err.style.display = 'block'; return; }
   if (password.length < 3) { err.textContent = '⚠️ Ο κωδικός πρέπει να είναι τουλάχιστον 3 χαρακτήρες!'; err.style.display = 'block'; return; }
   var isBanned = await checkIfBanned(username);
   if (isBanned) { err.textContent = '🚫 Αυτό το όνομα είναι banned!'; err.style.display = 'block'; return; }
   var existingSnap = await db.ref('registered_users/' + username.toLowerCase()).once('value');
-  if (existingSnap.exists()) { err.textContent = ' Αυτό το όνομα είναι ήδη κατοχυρωμένο!'; err.style.display = 'block'; return; }
+  if (existingSnap.exists()) { err.textContent = '❌ Αυτό το όνομα είναι ήδη κατοχυρωμένο!'; err.style.display = 'block'; return; }
   try {
     await db.ref('registered_users/' + username.toLowerCase()).set({ username: username, password: password, avatar: null, created_at: Date.now() });
     localStorage.setItem('chat_username', username); localStorage.setItem('chat_password', password);
@@ -621,7 +555,7 @@ async function adminClearAll() {
 }
 
 async function logoutChat() { 
-  if (!confirm("️ Προσοχή! Σημαντική Προειδοποίηση: Αν αποσυνδεθείτε, το όνομά σας αποδεσμεύεται. Αν το προλάβει και το κατοχυρώσει άλλος χρήστης, θα χάσετε μόνιμα το όνομα και τη φωτογραφία σας και θα πρέπει να κάνετε νέα εγγραφή από την αρχή. Θέλετε σίγουρα να αποσυνδεθείτε;")) return; 
+  if (!confirm("⚠️ Προσοχή! Σημαντική Προειδοποίηση: Αν αποσυνδεθείτε, το όνομά σας αποδεσμεύεται. Αν το προλάβει και το κατοχυρώσει άλλος χρήστης, θα χάσετε μόνιμα το όνομα και τη φωτογραφία σας και θα πρέπει να κάνετε νέα εγγραφή από την αρχή. Θέλετε σίγουρα να αποσυνδεθείτε;")) return; 
   document.getElementById('playerIframe').src = ''; document.getElementById('playerPanel').classList.remove('show'); isPlayerOpen = false; closeTvLiveWindow();
   try { 
     await db.ref('active_sessions/' + currentUser).remove(); await db.ref('users/' + currentUser).remove();
@@ -696,6 +630,7 @@ async function startRecording() {
   }
 }
 
+// ΔΙΟΡΘΩΜΕΝΗ: Πλήρης απελευθέρωση μικροφώνου για να μην ανταγωνίζεται το ραδιόφωνο
 function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
