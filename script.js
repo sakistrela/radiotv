@@ -294,6 +294,7 @@ async function loadPrivateMessages(otherUser) {
   });
 }
 
+// ΔΙΟΡΘΩΜΕΝΗ: Προσθήκη preload="none" και requestAnimationFrame για ομαλό scroll
 function addMessageToUI(msg, isPrivate) {
   var container = document.getElementById('msgContainer');
   if (msg._id) { var existingMsg = container.querySelector(`.msg[data-msg-id="${msg._id}"]`); if (existingMsg) return; }
@@ -474,104 +475,21 @@ function setupPresenceInitial() {
   }); 
 }
 
-// =========================================================================
-// ΟΡΙΣΤΙΚΗ ΔΙΟΡΘΩΣΗ: Πυρηνικός καθαρισμός κατά την εγγραφή νέου λογαριασμού
-// =========================================================================
 async function registerUser() {
-  var username = document.getElementById('userIn').value.trim(); 
-  var password = document.getElementById('passIn').value.trim();
-  var err = document.getElementById('err'); 
-  err.style.display = 'none';
-  
-  if (!username || !password) { 
-    err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; 
-    err.style.display = 'block'; 
-    return; 
-  }
-  if (username.includes(":")) { 
-    err.textContent = '⚠️ Το όνομα δεν μπορεί να περιέχει ":"'; 
-    err.style.display = 'block'; 
-    return; 
-  }
-  if (password.length < 3) { 
-    err.textContent = '⚠️ Ο κωδικός πρέπει να είναι τουλάχιστον 3 χαρακτήρες!'; 
-    err.style.display = 'block'; 
-    return; 
-  }
-  
+  var username = document.getElementById('userIn').value.trim(); var password = document.getElementById('passIn').value.trim();
+  var err = document.getElementById('err'); err.style.display = 'none';
+  if (!username || !password) { err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; err.style.display = 'block'; return; }
+  if (username.includes(":")) { err.textContent = '⚠️ Το όνομα δεν μπορεί να περιέχει ":"'; err.style.display = 'block'; return; }
+  if (password.length < 3) { err.textContent = '⚠️ Ο κωδικός πρέπει να είναι τουλάχιστον 3 χαρακτήρες!'; err.style.display = 'block'; return; }
   var isBanned = await checkIfBanned(username);
-  if (isBanned) { 
-    err.textContent = '🚫 Αυτό το όνομα είναι banned!'; 
-    err.style.display = 'block'; 
-    return; 
-  }
-  
-  var lowerUsername = username.toLowerCase();
-
-  // 1. ΠΥΡΗΝΙΚΟΣ ΚΑΘΑΡΙΣΜΟΣ: Σβήνουμε ΟΛΑ τα παλιά δεδομένα αυτού του ονόματος
+  if (isBanned) { err.textContent = '🚫 Αυτό το όνομα είναι banned!'; err.style.display = 'block'; return; }
+  var existingSnap = await db.ref('registered_users/' + username.toLowerCase()).once('value');
+  if (existingSnap.exists()) { err.textContent = '❌ Αυτό το όνομα είναι ήδη κατοχυρωμένο!'; err.style.display = 'block'; return; }
   try {
-    var updates = {};
-    
-    // Σβήσιμο δημόσιων μηνυμάτων
-    var messagesSnap = await db.ref('messages').once('value');
-    if (messagesSnap.exists()) {
-      messagesSnap.forEach(child => {
-        var msg = child.val();
-        if (msg.user && msg.user.toLowerCase() === lowerUsername) {
-          updates['messages/' + child.key] = null;
-        }
-      });
-    }
-
-    // Σβήσιμο ιδιωτικών μηνυμάτων
-    var privSnap = await db.ref('private_messages').once('value');
-    if (privSnap.exists()) {
-      privSnap.forEach(child => {
-        if (child.key.includes(lowerUsername)) {
-          updates['private_messages/' + child.key] = null;
-        }
-      });
-    }
-
-    // Σβήσιμο υπολοίπων δεδομένων χρήστη
-    updates['registered_users/' + lowerUsername] = null;
-    updates['users/' + username] = null;
-    updates['active_sessions/' + username] = null;
-    updates['banned_users/' + lowerUsername] = null;
-
-    if (Object.keys(updates).length > 0) {
-      await db.ref().update(updates);
-    }
-    
-    // Καθαρισμός τοπικής μνήμης browser (Local Storage & Memory)
-    localStorage.removeItem('user_avatar_' + lowerUsername);
-    if (typeof userAvatars !== 'undefined') {
-      delete userAvatars[lowerUsername];
-    }
-    
-  } catch (e) {
-    console.error("Σφάλμα καθαρισμού παλιών δεδομένων:", e);
-  }
-
-  // 2. Δημιουργία νέου, πεντακάθαρου λογαριασμού
-  try {
-    await db.ref('registered_users/' + lowerUsername).set({ 
-      username: username, 
-      password: password, 
-      avatar: null, 
-      created_at: Date.now() 
-    });
-    localStorage.setItem('chat_username', username); 
-    localStorage.setItem('chat_password', password);
-    
-    // 3. ΑΝΑΓΚΑΣΤΙΚΗ ΑΝΑΝΕΩΣΗ ΣΕΛΙΔΑΣ για να διωχθούν όλα τα cached δεδομένα
-    alert('✅ Ο λογαριασμός δημιουργήθηκε και καθαρίστηκαν όλα τα παλιά δεδομένα. Η σελίδα θα ανανεωθεί για καθαρή εκκίνηση.');
-    window.location.reload();
-    
-  } catch(e) { 
-    err.textContent = 'Σφάλμα: ' + e.message; 
-    err.style.display = 'block'; 
-  }
+    await db.ref('registered_users/' + username.toLowerCase()).set({ username: username, password: password, avatar: null, created_at: Date.now() });
+    localStorage.setItem('chat_username', username); localStorage.setItem('chat_password', password);
+    await enterChat(username);
+  } catch(e) { err.textContent = 'Σφάλμα: ' + e.message; err.style.display = 'block'; }
 }
 
 async function goChat(isAutoLogin = false) { 
@@ -637,7 +555,7 @@ async function adminClearAll() {
 }
 
 async function logoutChat() { 
-  if (!confirm("⚠️ Προσοχή! Σημαντική Προειδοποίηση: Αν αποσυνδεθείτε, το όνομά σας αποδεσμεύεται. Αν το προλάβει και το κατοχυρώσει άλλος χρήστης, θα χάσετε μόνιμα το όνομα και τη φωτογραφία σας και θα πρέπει να κάνετε νέα εγγραφή από την αρχή. Θέλετε σίγουρα να αποσυνδεθείτε;")) return; 
+  if (!confirm("⚠️ Προσοχή! Αν αποσυνδεθείτε, το όνομά σας αποδεσμεύεται. Αν το προλάβει και το κατοχυρώσει άλλος χρήστης, θα χάσετε μόνιμα το όνομα και τη φωτογραφία σας και θα πρέπει να κάνετε νέα εγγραφή από την αρχή.Θέλετε σίγουρα να αποσυνδεθείτε;")) return; 
   document.getElementById('playerIframe').src = ''; document.getElementById('playerPanel').classList.remove('show'); isPlayerOpen = false; closeTvLiveWindow();
   try { 
     await db.ref('active_sessions/' + currentUser).remove(); await db.ref('users/' + currentUser).remove();
@@ -712,6 +630,7 @@ async function startRecording() {
   }
 }
 
+// ΔΙΟΡΘΩΜΕΝΗ: Πλήρης απελευθέρωση μικροφώνου για να μην ανταγωνίζεται το ραδιόφωνο
 function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
