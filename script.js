@@ -294,6 +294,7 @@ async function loadPrivateMessages(otherUser) {
   });
 }
 
+// ΔΙΟΡΘΩΜΕΝΗ: Προσθήκη preload="none" και requestAnimationFrame για ομαλό scroll
 function addMessageToUI(msg, isPrivate) {
   var container = document.getElementById('msgContainer');
   if (msg._id) { var existingMsg = container.querySelector(`.msg[data-msg-id="${msg._id}"]`); if (existingMsg) return; }
@@ -474,51 +475,12 @@ function setupPresenceInitial() {
   }); 
 }
 
-// ==========================================
-// ΝΕΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΕΛΕΓΧΟΥ ΚΩΔΙΚΟΥ
-// ==========================================
-function showPasswordHint() {
-  var hint = document.getElementById('passHint');
-  if (hint) hint.style.display = 'block';
-}
-
-function hidePasswordHint() {
-  var hint = document.getElementById('passHint');
-  if (hint) hint.style.display = 'none';
-}
-
-function validatePassword(password) {
-  var hasLetters = /[a-zA-Z]/.test(password);
-  var hasNumbers = /[0-9]/.test(password);
-  var hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  var isLongEnough = password.length >= 8;
-
-  if (!hasLetters) return { valid: false, message: "⚠️ Ο κωδικός πρέπει να περιέχει τουλάχιστον 1 γράμμα!" };
-  if (!hasNumbers) return { valid: false, message: "⚠️ Ο κωδικός πρέπει να περιέχει τουλάχιστον 1 αριθμό!" };
-  if (!hasSymbols) return { valid: false, message: "⚠️ Ο κωδικός πρέπει να περιέχει τουλάχιστον 1 σύμβολο (π.χ. !@#$)!" };
-  if (!isLongEnough) return { valid: false, message: "⚠️ Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες!" };
-
-  return { valid: true, message: "" };
-}
-// ==========================================
-
 async function registerUser() {
-  var username = document.getElementById('userIn').value.trim(); 
-  var password = document.getElementById('passIn').value;
-  var err = document.getElementById('err'); 
-  err.style.display = 'none';
-  
+  var username = document.getElementById('userIn').value.trim(); var password = document.getElementById('passIn').value.trim();
+  var err = document.getElementById('err'); err.style.display = 'none';
   if (!username || !password) { err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; err.style.display = 'block'; return; }
   if (username.includes(":")) { err.textContent = '⚠️ Το όνομα δεν μπορεί να περιέχει ":"'; err.style.display = 'block'; return; }
-  
-  // ΝΕΟΣ ΕΛΕΓΧΟΣ ΑΣΦΑΛΕΙΑΣ ΚΩΔΙΚΟΥ
-  var passCheck = validatePassword(password);
-  if (!passCheck.valid) {
-    err.textContent = passCheck.message;
-    err.style.display = 'block';
-    return;
-  }
-
+  if (password.length < 3) { err.textContent = '⚠️ Ο κωδικός πρέπει να είναι τουλάχιστον 3 χαρακτήρες!'; err.style.display = 'block'; return; }
   var isBanned = await checkIfBanned(username);
   if (isBanned) { err.textContent = '🚫 Αυτό το όνομα είναι banned!'; err.style.display = 'block'; return; }
   var existingSnap = await db.ref('registered_users/' + username.toLowerCase()).once('value');
@@ -531,21 +493,9 @@ async function registerUser() {
 }
 
 async function goChat(isAutoLogin = false) { 
-  var username = document.getElementById('userIn').value.trim(); 
-  var password = document.getElementById('passIn').value;
-  var err = document.getElementById('err'); 
-  err.style.display = 'none'; 
-  
+  var username = document.getElementById('userIn').value.trim(); var password = document.getElementById('passIn').value.trim();
+  var err = document.getElementById('err'); err.style.display = 'none'; 
   if (!username || !password) { err.textContent = '⚠️ Συμπλήρωσε όνομα και κωδικό!'; err.style.display = 'block'; return; }
-  
-  // ΝΕΟΣ ΕΛΕΓΧΟΣ ΑΣΦΑΛΕΙΑΣ ΚΩΔΙΚΟΥ
-  var passCheck = validatePassword(password);
-  if (!passCheck.valid) {
-    err.textContent = passCheck.message;
-    err.style.display = 'block';
-    return;
-  }
-
   var isBanned = await checkIfBanned(username);
   if (isBanned) { err.textContent = '🚫 Αυτό το όνομα είναι banned!'; err.style.display = 'block'; if (isAutoLogin) { localStorage.removeItem('chat_username'); localStorage.removeItem('chat_password'); } return; } 
   if (username.toLowerCase() === "sakis" && password !== "019630") { 
@@ -680,6 +630,7 @@ async function startRecording() {
   }
 }
 
+// ΔΙΟΡΘΩΜΕΝΗ: Πλήρης απελευθέρωση μικροφώνου για να μην ανταγωνίζεται το ραδιόφωνο
 function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();

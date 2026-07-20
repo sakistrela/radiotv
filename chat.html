@@ -82,23 +82,19 @@
     <h1>💬 RadioChat Live</h1>
     <input type="text" id="userIn" placeholder="Όνομα χρήστη" autocomplete="username">
 
-<!-- Πεδίο κωδικού με onfocus/onblur -->
+<!-- Προσθήκη onfocus και onblur για την εμφάνιση/απόκρυψη του μηνύματος -->
 <input type="password" id="passIn" placeholder="Κωδικός" autocomplete="current-password" 
-       onfocus="showPasswordHint()" 
-       onblur="hidePasswordHint()">
+       onfocus="document.getElementById('passHint').style.display='block'" 
+       onblur="document.getElementById('passHint').style.display='none'">
 
-<!-- Μήνυμα προειδοποίησης -->
-<div id="passHint" class="password-hint" style="display: none;">
-  ⚠️ <strong>Ασφαλής Κωδικός:</strong> Χρησιμοποίησε συνδυασμό από:<br>
-  ✓ Γράμματα (κεφαλαία & μικρά)<br>
-  ✓ Αριθμούς<br>
-  ✓ Σύμβολα (!@#$%^&*)<br>
-  <em>Π.χ.: MyPass123!</em>
+<!-- Το μήνυμα που εμφανίζεται μόνο όταν ο χρήστης κάνει κλικ στο πεδίο -->
+<div id="passHint" style="display: none; color: #ffb74d; font-size: 0.85em; margin-top: 6px; text-align: left; font-weight: 500; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; border-left: 3px solid #ffb74d;">
+  ⚠️ Προσοχή: Μην βάλεις σκέτα γράμματα ή σκέτους αριθμούς. Χρησιμοποίησε συνδυασμό (π.χ. γράμματα + αριθμούς)!
 </div>
 
 <button onclick="goChat(false)">Είσοδος</button>
-<button class="register-btn" onclick="registerUser()">Εγγραφή Νέου Λογαριασμού</button>
-<div class="error" id="err"></div>
+    <button class="register-btn" onclick="registerUser()">Εγγραφή Νέου Λογαριασμού</button>
+    <div class="error" id="err"></div>
   </div>
 </div>
 

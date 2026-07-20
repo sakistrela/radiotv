@@ -10,59 +10,6 @@ body { background: #0f0f1e; color: #fff; font-family: Arial, sans-serif; height:
 .login-box .register-btn { background: linear-gradient(135deg, #10b981, #059669); }
 .login-box button:hover { opacity: 0.9; }
 .error { background: #ef4444; color: #fff; padding: 10px; border-radius: 8px; margin-top: 10px; display: none; }
-
-/* --- ΝΕΕΣ ΠΡΟΣΘΗΚΕΣ ΓΙΑ ΤΗΝ ΥΠΟΔΕΙΞΗ ΚΩΔΙΚΟΥ --- */
-.password-hint {
-  display: none;
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-  border: 2px solid #fdcb6e;
-  border-radius: 10px;
-  padding: 12px 15px;
-  margin-top: 8px;
-  font-size: 0.85em;
-  color: #2d3436;
-  box-shadow: 0 4px 12px rgba(253, 203, 110, 0.3);
-  animation: slideDown 0.3s ease;
-  text-align: left;
-}
-.password-hint strong {
-  color: #d63031;
-  display: block;
-  margin-bottom: 8px;
-  font-size: 1.1em;
-}
-.password-hint em {
-  display: block;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px dashed #fdcb6e;
-  color: #0984e3;
-  font-style: normal;
-  font-weight: 600;
-}
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.password-strength {
-  margin-top: 8px;
-  height: 6px;
-  background: #dfe6e9;
-  border-radius: 3px;
-  overflow: hidden;
-  display: none;
-}
-.password-strength-bar {
-  height: 100%;
-  width: 0%;
-  transition: all 0.3s ease;
-  border-radius: 3px;
-}
-.strength-weak { background: #d63031; width: 33%; }
-.strength-medium { background: #fdcb6e; width: 66%; }
-.strength-strong { background: #00b894; width: 100%; }
-/* --- ΤΕΛΟΣ ΝΕΩΝ ΠΡΟΣΘΗΚΩΝ --- */
-
 .app { display: none; height: 100vh; }
 .chat-main { flex: 1; display: flex; flex-direction: column; background: rgba(15, 15, 30, 0.3); transition: background 0.4s; }
 .chat-main.private-mode { background: rgba(45, 27, 78, 0.6); }
