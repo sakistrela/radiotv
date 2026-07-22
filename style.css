@@ -507,7 +507,7 @@ body { background: #0f0f1e; color: #fff; font-family: Arial, sans-serif; height:
 .admin-badge { display: inline-block; margin-left: 5px; font-size: 1em; vertical-align: middle; }
 .avatar.admin-avatar { border: 2px solid #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.6); }
 .msg-avatar.admin-avatar { border: 2px solid #fbbf24; box-shadow: 0 0 8px rgba(251, 191, 36, 0.5); }
-.radio-now-playing-bar { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 15px; padding: 5px 15px; background: rgba(0, 0, 0, 0.3); border-radius: 20px; border: 1px solid rgba(0, 255, 204, 0.3); overflow: hidden; position: relative; flex-shrink: 1; max-width: 400px; }
+.radio-now-playing-bar { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 15px; padding: 5px 15px; background: rgba(0, 0, 0, 0.3); border-radius: 20px; border: 1px solid rgba(0, 255, 204, 0.3); overflow: hidden; position: relative; flex-shrink: 1; max-width: 1100px; }
 .radio-now-playing-bar::before, .radio-now-playing-bar::after { content: ''; position: absolute; top: 0; width: 100px; height: 100%; z-index: 2; pointer-events: none; }
 .radio-now-playing-bar::before { left: 0; background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, transparent 100%); }
 .radio-now-playing-bar::after { right: 0; background: linear-gradient(to left, rgba(0,0,0,0.3) 0%, transparent 100%); }
