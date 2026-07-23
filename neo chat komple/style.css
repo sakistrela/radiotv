@@ -370,7 +370,7 @@ h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; }
 /* ΒΕΛΤΙΣΤΟΠΟΙΗΜΕΝΟ PLAYER PANEL (FIX)        */
 /* ========================================== */
 .player-panel { 
-  position: fixed; top: 0; left: 0; right: 280px; height: 60vh; 
+  position: fixed; top: 0; left: 0; right: 300px; height: 70vh; 
   background: transparent; /* Αφαίρεση χρώματος/blur για ελαφρύ rendering */
   z-index: 950; 
   transform: translateY(-100%) translateZ(0); /* Ενεργοποίηση GPU layer */
@@ -380,7 +380,7 @@ h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; }
   will-change: transform;
 }
 .player-panel.show { transform: translateY(0) translateZ(0); }
-.player-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: rgba(0,0,0,0.3); flex-shrink: 0; gap: 12px; border-bottom: 1px solid var(--border-glass); flex-wrap: wrap; }
+.player-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px; background: rgba(0,0,0,0.8); flex-shrink: 0; gap: 12px; border-bottom: 1px solid var(--border-glass); flex-wrap: wrap; }
 .player-panel-title { color: var(--text-primary); font-weight: 600; font-size: 1em; display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
 .player-panel iframe { flex: 1; width: 100%; border: none; background: transparent; }
 
@@ -747,3 +747,18 @@ h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; }
 
 * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.1) transparent; }
 *:hover { scrollbar-color: rgba(255, 255, 255, 0.25) transparent; }
+/* ========================================== */
+/* ΚΟΥΜΠΙΑ PLAYER ΚΑΤΩ ΑΡΙΣΤΕΡΑ */
+/* ========================================== */
+.player-footer-buttons {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.player-panel-header {
+  justify-content: center !important;
+}
