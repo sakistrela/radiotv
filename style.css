@@ -3,6 +3,107 @@ html { overflow-x: hidden; }
 body { background: #0f0f1e; color: #fff; font-family: Arial, sans-serif; height: 100vh; overflow: hidden; position: relative; overflow-x: hidden; }
 .bg-container { position: fixed; inset: 0; z-index: -1; background-image: url('https://i.imgur.com/NMZc9VH.jpeg'); background-size: cover; background-position: center center; background-repeat: no-repeat; transition: filter 0.3s; }
 .bg-overlay { position: fixed; inset: 0; z-index: -1; background: rgba(15, 15, 30, 0.7); }
+
+/* ============================================ */
+/* TOAST NOTIFICATIONS */
+/* ============================================ */
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 350px;
+}
+
+.toast {
+  background: rgba(22, 33, 62, 0.95);
+  border: 2px solid #e94560;
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: #fff;
+  font-size: 0.95em;
+  font-weight: bold;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(233, 69, 96, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: toastSlideIn 0.35s ease, toastFadeOut 0.4s ease 9.6s forwards;
+  min-width: 260px;
+  max-width: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.toast:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7), 0 0 20px rgba(233, 69, 96, 0.5);
+}
+
+.toast-icon {
+  font-size: 1.5em;
+  flex-shrink: 0;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 0.8em;
+  color: #9ca3af;
+  margin-bottom: 3px;
+  font-weight: normal;
+}
+
+.toast-message {
+  font-size: 1em;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastFadeOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
+
+/* ============================================ */
+/* UNREAD BADGE */
+/* ============================================ */
+.unread-badge {
+  background: #e94560;
+  color: #fff;
+  font-size: 0.75em;
+  font-weight: bold;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: 6px;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 0 8px rgba(233, 69, 96, 0.6);
+  animation: badgePulse 2s infinite;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
 .login { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
 .login-box { background: rgba(22, 33, 62, 0.95); padding: 40px; border-radius: 16px; border: 2px solid #e94560; text-align: center; max-width: 400px; width: 90%; }
 .login-box h1 { color: #e94560; margin-bottom: 20px; }
@@ -171,7 +272,7 @@ body { background: #0f0f1e; color: #fff; font-family: Arial, sans-serif; height:
 .avatar.loading { pointer-events: none; cursor: not-allowed; }
 .avatar-spinner { width: 100%; height: 100%; border: 3px solid rgba(255,255,255,0.3); border-top-color: #e94560; border-radius: 50%; animation: spin 0.8s linear infinite; }
 .user-info { flex: 1; min-width: 0; }
-.user-name { font-weight: bold; font-size: 0.95em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-name { font-weight: bold; font-size: 0.95em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; }
 .user-status { font-size: 0.8em; color: #10b981; }
 .private-lock-btn, .ban-user-btn { background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 3px; transition: transform 0.2s; flex-shrink: 0; }
 .private-lock-btn:hover, .ban-user-btn:hover { transform: scale(1.3); }
@@ -184,13 +285,7 @@ body { background: #0f0f1e; color: #fff; font-family: Arial, sans-serif; height:
 .admin-btn { background: #e94560; display: none; }
 .admin-btn.show { display: block; }
 .admin-btn:hover { background: #c73652; }
-.private-notification-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 2000; }
-.private-notification-overlay.show { display: flex; }
-.private-notification-popup { background: linear-gradient(135deg, #dc2626, #f97316); padding: 30px 40px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8); border: 3px solid #fff; animation: blinkPopup 1s infinite; cursor: pointer; }
-@keyframes blinkPopup { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; transform: scale(0.97); } }
-.private-notification-popup h3 { color: #fff; font-size: 1.4em; margin-bottom: 10px; }
-.private-notification-popup p { color: #fff; font-size: 1.1em; margin-bottom: 20px; }
-.private-notification-popup .accept-btn { background: #fff; color: #dc2626; border: none; padding: 12px 30px; border-radius: 25px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
+
 .bg-controls-panel { position: absolute; bottom: 75px; right: 20px; background: rgba(22, 33, 62, 0.95); border-radius: 16px; padding: 20px; width: 320px; max-width: calc(100vw - 40px); box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 99; display: none; border: 2px solid #e94560; }
 .bg-controls-panel.show { display: block; }
 .bg-controls-panel h3 { color: #e94560; margin-bottom: 15px; font-size: 1.1em; }
@@ -280,214 +375,110 @@ body { background: #0f0f1e; color: #fff; font-family: Arial, sans-serif; height:
 ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
 
 /* ============================================ */
-/* RESPONSIVE - ΠΛΗΡΗΣ ΚΑΛΥΨΗ ΟΛΩΝ ΤΩΝ ΟΘΟΝΩΝ */
+/* RESPONSIVE */
 /* ============================================ */
-
-/* Πολύ μεγάλες οθόνες (Desktop 1400px+) */
 @media (min-width: 1400px) {
   .msg { max-width: 50%; }
   .sidebar { width: 280px; }
   .player-panel { right: 280px; }
 }
-
-/* Μεσαίες-Μεγάλες οθόνες (Laptop 1024px - 1399px) */
 @media (max-width: 1399px) and (min-width: 1025px) {
   .msg { max-width: 55%; }
   .sidebar { width: 240px; }
   .player-panel { right: 240px; }
   .tv-live-window { right: 260px; width: 800px; }
 }
-
-/* Tablet Landscape / Μικρά Laptops (900px - 1024px) - ΚΡΙΣΙΜΗ ΠΕΡΙΟΧΗ */
 @media (max-width: 1024px) and (min-width: 769px) {
   .header { padding: 12px 16px; gap: 8px; }
   .header h2 { font-size: 1.1em; }
-  
   .online-badge { padding: 6px 12px; font-size: 0.85em; }
   .tv-live-btn { padding: 6px 14px; font-size: 0.85em; }
-  
   .sidebar { width: 220px; }
   .player-panel { right: 220px; }
-  
   .msg { max-width: 65%; }
-  
   .input-area { padding: 12px 16px; }
   .input-wrapper { gap: 8px; padding: 8px 12px; }
-  
-  .input-field {
-    flex-basis: 100%;
-    order: 10;
-    margin-top: 6px;
-    min-width: 100%;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 6px;
-  }
-  
-  .send-btn {
-    order: 11;
-    margin-left: auto;
-  }
-  
-  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn {
-    font-size: 1.3em;
-  }
-  
-  .tv-live-window { 
-    width: 650px; 
-    max-width: calc(100vw - 240px);
-    height: 400px;
-    right: 240px;
-  }
-  
-  .emoji-panel, .bg-controls-panel, .banned-panel { 
-    width: 300px; 
-    max-width: calc(100vw - 40px);
-  }
+  .input-field { flex-basis: 100%; order: 10; margin-top: 6px; min-width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; }
+  .send-btn { order: 11; margin-left: auto; }
+  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn { font-size: 1.3em; }
+  .tv-live-window { width: 650px; max-width: calc(100vw - 240px); height: 400px; right: 240px; }
+  .emoji-panel, .bg-controls-panel, .banned-panel { width: 300px; max-width: calc(100vw - 40px); }
 }
-
-/* Tablet Portrait (768px - 899px) */
 @media (max-width: 899px) and (min-width: 769px) {
   .header { padding: 10px 14px; }
   .header h2 { font-size: 1em; }
-  
-  .radio-now-playing-bar { 
-    display: none;
-  }
-  
+  .radio-now-playing-bar { display: none; }
   .sidebar { width: 200px; }
   .player-panel { right: 200px; }
-  
   .msg { max-width: 70%; }
-  
   .input-area { padding: 10px 14px; }
   .input-wrapper { gap: 6px; padding: 8px 10px; }
-  
-  .input-field {
-    flex-basis: 100%;
-    order: 10;
-    margin-top: 6px;
-    min-width: 100%;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 6px;
-  }
-  
-  .send-btn {
-    order: 11;
-    margin-left: auto;
-  }
-  
-  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn {
-    font-size: 1.2em;
-  }
-  
-  .tv-live-window { 
-    width: 90vw; 
-    max-width: 600px;
-    height: 320px;
-    right: 10px;
-    left: 10px;
-  }
-  
-  .emoji-panel, .bg-controls-panel, .banned-panel { 
-    width: calc(100vw - 32px); 
-    max-width: 380px;
-    left: 16px; 
-    right: 16px; 
-  }
+  .input-field { flex-basis: 100%; order: 10; margin-top: 6px; min-width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; }
+  .send-btn { order: 11; margin-left: auto; }
+  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn { font-size: 1.2em; }
+  .tv-live-window { width: 90vw; max-width: 600px; height: 320px; right: 10px; left: 10px; }
+  .emoji-panel, .bg-controls-panel, .banned-panel { width: calc(100vw - 32px); max-width: 380px; left: 16px; right: 16px; }
 }
-
-/* Κινητά (481px - 768px) */
 @media (max-width: 768px) {
   .sidebar { position: fixed; top: 0; right: -300px; height: 100vh; z-index: 600; transition: right 0.3s ease; width: 280px; }
   .sidebar.open { right: 0; }
   .sidebar-toggle-btn { display: flex; }
   .sidebar-close-btn { display: block; }
   .chat-main { width: 100%; }
-  
   .header { padding: 10px 12px; gap: 8px; min-height: 56px; }
   .header h2 { font-size: 0.95em; }
-  
   .online-badge { padding: 6px 10px; font-size: 0.8em; }
   .tv-live-btn { padding: 6px 12px; font-size: 0.8em; }
-  
   .messages { padding: 12px; gap: 10px; }
   .msg { max-width: 80%; padding: 8px 12px; }
   .msg .text { font-size: 1.4em; }
   .msg-avatar { width: 32px; height: 32px; font-size: 0.8em; }
-  
   .input-area { padding: 10px 12px; }
   .input-wrapper { border-radius: 20px; padding: 6px 10px; gap: 6px; }
-  
   .input-field { font-size: 0.95em; padding: 6px 0; }
-  
   .send-btn { width: 40px; height: 40px; }
   .send-btn svg { width: 18px; height: 18px; }
-  
-  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn {
-    font-size: 1.3em;
-  }
-  
+  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn { font-size: 1.3em; }
   .emoji-panel, .bg-controls-panel, .banned-panel { width: calc(100vw - 40px); left: 20px; right: 20px; }
-  
   .player-panel { width: 100%; right: 0; height: 70vh; }
-  
   .tv-live-window { width: 90vw; max-width: 380px; height: 260px; top: 70px; right: 10px; left: auto; }
-  
   .private-header { padding: 10px 14px; }
   .private-header-text { font-size: 1em; }
+  .ban-notification-popup, .ban-type-popup, .clear-confirmation-popup, .audio-preview-popup { padding: 20px; }
   
-  .modal-popup, .ban-notification-popup, .ban-type-popup, .clear-confirmation-popup, .audio-preview-popup {
-    padding: 20px;
-  }
+  .toast-container { top: 60px; right: 10px; left: 10px; max-width: 100%; }
+  .toast { min-width: 0; width: 100%; padding: 12px 14px; font-size: 0.9em; }
 }
-
-/* Πολύ μικρές οθόνες (320px - 480px) */
 @media (max-width: 480px) {
   .header { padding: 8px 10px; gap: 6px; min-height: 52px; }
   .header h2 { font-size: 0.85em; }
   .online-badge { padding: 4px 8px; font-size: 0.75em; }
   .tv-live-btn { padding: 5px 10px; font-size: 0.75em; }
-  
   .messages { padding: 10px; gap: 8px; }
   .msg { max-width: 85%; padding: 8px 10px; }
   .msg .text { font-size: 1.3em; }
   .msg-avatar { width: 30px; height: 30px; font-size: 0.75em; }
-  
   .input-area { padding: 8px 10px; }
   .input-wrapper { border-radius: 16px; padding: 5px 8px; gap: 4px; }
-  
   .input-field { font-size: 0.9em; padding: 4px 0; min-width: 100px; }
-  
   .send-btn { width: 36px; height: 36px; }
   .send-btn svg { width: 16px; height: 16px; }
-  
-  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn {
-    font-size: 1.1em;
-  }
-  
+  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn { font-size: 1.1em; }
   .emoji-panel { height: 350px; bottom: 70px; }
   .emoji-category { grid-template-columns: repeat(5, 1fr); }
   .emoji { font-size: 1.5em; padding: 8px; }
-  
   .tv-live-window { min-width: 280px; height: 220px; }
-  
   .player-panel-header { padding: 8px 12px; }
   .player-panel-title { font-size: 0.95em; }
   .player-close-btn, .player-disconnect-btn { padding: 6px 12px; font-size: 0.8em; }
 }
-
-/* Εξαιρετικά μικρές οθόνες (κάτω από 360px) */
 @media (max-width: 360px) {
   .header h2 { font-size: 0.8em; }
   .msg { max-width: 90%; }
   .input-wrapper { gap: 3px; padding: 4px 6px; }
   .send-btn { width: 32px; height: 32px; }
-  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn {
-    font-size: 1em;
-  }
+  .emoji-btn, .bg-btn, .banned-btn, .sound-btn, .radio-btn, .image-btn, .mic-btn { font-size: 1em; }
 }
-
-/* Landscape orientation σε κινητά */
 @media (max-height: 500px) and (orientation: landscape) {
   .header { padding: 6px 12px; min-height: 44px; }
   .messages { padding: 8px; }

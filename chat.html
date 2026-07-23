@@ -9,6 +9,10 @@
 <body>
 <div class="bg-container" id="bgContainer"></div>
 <div class="bg-overlay"></div>
+
+<!-- Toast Notifications Container -->
+<div class="toast-container" id="toastContainer"></div>
+
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <div class="ban-type-overlay" id="banTypeOverlay">
@@ -27,14 +31,6 @@
     <div class="ban-icon"></div>
     <h2>Έχεις γίνει Banned!</h2>
     <p>Έχεις αποκλειστεί από τον διαχειριστή.</p>
-  </div>
-</div>
-
-<div class="private-notification-overlay" id="privateNotifOverlay">
-  <div class="private-notification-popup" onclick="acceptPrivateNotification()">
-    <h3>💬 Νέο Ιδιωτικό Μήνυμα!</h3>
-    <p id="privateNotifText">Κάποιος σου έστειλε ιδιωτικό</p>
-    <button class="accept-btn">Πάτα εδώ</button>
   </div>
 </div>
 
@@ -81,14 +77,10 @@
   <div class="login-box">
     <h1>💬 RadioChat Live</h1>
     <input type="text" id="userIn" placeholder="Όνομα χρήστη" autocomplete="username">
-
-    <!-- ΔΙΟΡΘΩΣΗ: Αφαιρέθηκαν τα inline onfocus/onblur για να μην "κλέβουν" το κλικ -->
     <input type="password" id="passIn" placeholder="Κωδικός" autocomplete="off">
-
     <div id="passHint" style="display: none; color: #ffb74d; font-size: 0.85em; margin-top: 6px; text-align: left; font-weight: 900; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; border-left: 3px solid #ffb74d;">
       ⚠️ Προσοχή: Χρησιμοποίησε οπωσδήποτε γράμματα, αριθμούς και σύμβολα (π.χ./,-, #, !). Οι πολύ απλοί κωδικοί μπλοκάρονται αυτόματα από τη Google για λόγους ασφαλείας.!
     </div>
-
     <button onclick="goChat(false)">Είσοδος</button>
     <button class="register-btn" onclick="registerUser()">Εγγραφή Νέου Λογαριασμού</button>
     <div class="error" id="err"></div>
@@ -107,14 +99,14 @@
       <h2>💬 Radio Synnefa Chat Live</h2>
       
       <div class="radio-now-playing-bar" id="radioNowPlayingBar">
-        <span class="radio-icon"></span>
+        <span class="radio-icon">📻</span>
         <span id="radioNowPlayingText" class="radio-text">Αναμονή για εκπομπή...</span>
       </div>
       
       <div style="display:flex; align-items:center; gap:10px;">
-	  <button class="tv-live-btn" onclick="toggleTvLiveWindow()"> TV Live</button>
+        <button class="tv-live-btn" onclick="toggleTvLiveWindow()"> TV Live</button>
         <div class="online-badge"><span style="color:#ff0000">●</span> <span id="onlineNum">0</span> online</div>
-        </div>
+      </div>
     </div>
 
     <div class="messages" id="msgContainer"></div>
