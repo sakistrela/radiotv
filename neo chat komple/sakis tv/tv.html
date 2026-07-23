@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ράδιο Σύννεφα TV</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome για εικονίδια -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- Σύνδεση με το αρχείο CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="show-loading"> 
+    <div class="player-fullscreen" id="mainContainer">
+         
+        <!-- Smart TV Header -->
+        <div class="player-header" id="playerHeader">
+            <div class="brand-title">Ράδιο Σύννεφα <span>TV</span></div>
+            <div class="digital-clock" id="digitalClock">00:00:00</div>
+        </div>
+
+        <div class="live-badge">ΖΩΝΤΑΝΑ</div>
+
+        <!-- Premium Notice Loading Box -->
+        <div id="noticeMessage" class="live-notice">
+            <div class="notice-title">Ράδιο Σύννεφα TV</div>
+            <div class="notice-sub">Γίνεται αυτόματη σύνδεση με τη ροή του Live Stream...</div>
+            <div class="spinner"></div>
+        </div>
+
+        <div class="mouse-tracker" id="tracker"></div>
+
+        <video id="backupVideo" class="backup-video" src="https://res.cloudinary.com/dtiuiw8sp/video/upload/v1778706107/spot_radio_sinefa_tv_xatuhk.mp4" muted playsinline></video>
+
+        <iframe id="vdoPlayer" 
+                src="https://vdo.ninja/?view=SiDsgNa&cleanoutput&transparent&autoplay&api=1" 
+                allow="autoplay; autofocus; encrypted-media">
+        </iframe>
+
+        <video id="hlsPlayer" class="live-video-element" muted playsinline></video>
+
+        <video id="picartoPlayer" class="live-video-element" src="https://edge1-eu-west.picarto.tv/stream/golive%2bzakynthos.mp4" muted playsinline></video>
+
+        <!-- Floating Controls Panel -->
+        <div class="player-controls-wrapper">
+            <div class="player-controls" id="playerControls">
+                <div class="volume-container pulse-attention" id="volumeContainer">
+                    <span id="volumeIcon"><i class="fas fa-volume-mute"></i></span>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="0">
+                </div>
+                 
+                <button id="fsToggle" class="fullscreen-btn">
+                    <span id="fsIcon"><i class="fas fa-expand"></i></span> 
+                    <span id="fsText">Πλήρης Οθόνη</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Σύνδεση με το αρχείο JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
